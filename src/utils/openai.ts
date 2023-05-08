@@ -122,6 +122,17 @@ The rules for the commit message are as follows:
 - A commit summary should be less than 100 characters long. 
 - A commit description should be less than 100 characters long.
 - The commit summary needs to start with the appropriate type of commit (feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert) ${
-    scope !== "." ? `with the following scope (${scope}) ` : ""
+    scope !== "." ? `with the following scope (${scope}) ` : "with no scope "
 }followed by a colon (:). The scope is optional.
+- feat: A new feature
+- fix: A bug fix
+- docs: Documentation only changes
+- style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+- refactor: A code change that neither fixes a bug nor adds a feature
+- test: Adding missing tests or correcting existing tests
+- chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
+- perf: A code change that improves performance
+- ci: Changes to your CI configuration files and scripts
+- build: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
+- revert: Reverts a previous commit
 `;
