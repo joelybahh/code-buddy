@@ -1,0 +1,52 @@
+{
+    "name": "code-buddy",
+    "version": "0.1.0",
+    "description": "An AI-powered developer assistant for code reviews, automating commits, and more.",
+    "exports": "./dist/index.js",
+    "types": "dist/index.d.ts",
+    "type": "module",
+    "main": "./src/index.ts",
+    "scripts": {
+        "dev": "ts-node dist/index.js",
+        "build": "tsc"
+    },
+    "engines": {
+        "node": ">=14.16"
+    },
+    "files": [
+        "dist"
+    ],
+    "bin": {
+        "cb": "./dist/index.js"
+    },
+    "keywords": [
+        "ai",
+        "gpt",
+        "developer",
+        "assistant",
+        "code-review",
+        "commit",
+        "automation",
+        "git",
+        "cli",
+        "tool",
+        "openai"
+    ],
+    "author": "Joel Gabriel",
+    "license": "ISC",
+    "dependencies": {
+        "chalk": "^5.2.0",
+        "dotenv": "^16.0.3",
+        "inquirer": "^9.2.1",
+        "openai": "^3.2.1",
+        "simple-git": "^3.18.0"
+    },
+    "devDependencies": {
+        "@types/chalk": "^2.2.0",
+        "@types/inquirer": "^9.0.3",
+        "@types/node": "^18.16.3",
+        "prettier": "^2.8.8",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.0.4"
+    }
+}
