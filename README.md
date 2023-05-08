@@ -11,23 +11,23 @@ CodeBuddy is an AI-powered developer assistant for code reviews, automating comm
 
 You can install CodeBuddy globally using npm:
 
-\```bash
+```
 npm install -g code-buddy
-\```
+```
 
 Or using yarn:
 
-\```bash
+```
 yarn global add code-buddy
-\```
+```
 
 ## Usage
 
 To use CodeBuddy, run the following command:
 
-\```bash
+```
 cb commit
-\```
+```
 
 This will prompt you to answer a few questions and then generate a commit message based on your input and the diff.
 
