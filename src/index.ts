@@ -3,41 +3,26 @@
 import { simpleGit } from "simple-git";
 import chalk from "chalk";
 
-import { commitMessagePrompt, commitPrompts } from "./prompts/index.js";
+import { commitMessagePrompt } from "./prompts/index.js";
 import { commitChanges, getStagedFiles, groupFilesByScope } from "./utils/git.js";
 
-async function commitAll(scopeArg?: string) {
+export type CodeBuddyConfig = {
+    apiKey: string;
+    organization: string;
+    model: "gpt-4" | "gpt-3.5-turbo";
+    scopeTrim: string;
+    diffSizeLimit?: number;
+};
+
+async function commitAll() {
     const git = simpleGit();
     const stagedFiles = await getStagedFiles();
 
     const filesGroupedByScope = groupFilesByScope(stagedFiles);
 
-    if (scopeArg) {
-        const files = filesGroupedByScope[scopeArg];
-        await git.add(files);
-        const commitMessage = await commitPrompts(scopeArg, files);
-        await git.commit(commitMessage);
-
-        console.log(
-            chalk.green("✨ Committed changes to ") +
-                chalk.bold.blue(scopeArg) +
-                chalk.green(" with the following message: \n") +
-                chalk.bold.yellow(commitMessage)
-        );
-    } else {
-        for (const scope in filesGroupedByScope) {
-            const files = filesGroupedByScope[scope];
-            await git.add(files);
-            const commitMessage = await commitPrompts(scope, files);
-            await git.commit(commitMessage);
-
-            console.log(
-                chalk.green("✨ Committed changes to ") +
-                    chalk.bold.blue(scope) +
-                    chalk.green(" with the following message: \n") +
-                    chalk.bold.yellow(commitMessage)
-            );
-        }
+    for (const scope in filesGroupedByScope) {
+        const message = await commitMessagePrompt(scope || ".");
+        await commitChanges(message);
     }
 }
 
@@ -65,7 +50,7 @@ async function main() {
             const parsedArgs = parseArgs(process.argv.slice(OPTIONAL_ARG_START_INDEX));
             const scope = parsedArgs.scope as string | undefined;
 
-            commitAll(scope);
+            commitAll();
             break;
         }
         case "commit":

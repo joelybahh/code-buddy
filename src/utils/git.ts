@@ -32,9 +32,10 @@ export function groupFilesByScope(files: string[]): Record<string, string[]> {
     const groups: Record<string, string[]> = {};
 
     for (const file of files) {
-        const scopeMatch = file.match(/^(?:apps\/([^\/]+)|packages\/([^\/]+))/);
+        const scopeMatch = file.match(/^(?:apps\/([^\/]+)|packages\/([^\/]+)|functions\/([^\/]+))/);
+
         if (scopeMatch) {
-            const scope = scopeMatch[1] || scopeMatch[2];
+            const scope = scopeMatch[1] || scopeMatch[2] || scopeMatch[3];
             if (!groups[scope]) {
                 groups[scope] = [];
             }

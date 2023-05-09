@@ -3,7 +3,7 @@ import chalk from "chalk";
 
 import { stageScopedChanges, getDiffForFiles, getStagedFiles } from "../utils/git.js";
 import { logPretty } from "../utils/log.js";
-import { determineCommitMessage, summariseDescription } from "../utils/openai.js";
+import { determineCommitMessage, loadConfig, summariseDescription } from "../utils/openai.js";
 
 export async function commitPrompts(scope: string, changes: string[]) {
     const suggestedType = "feat"; // Replace with a function to suggest a commit type based on the changes
@@ -87,7 +87,9 @@ export async function commitMessagePrompt(scope: string) {
         // Check the size of the diff, if its too big, ask the user to select the files they want to use in the diff for the commit message
         // If the diff is small enough, generate the commit message
 
-        if (diff.length > 2000) {
+        const config = await loadConfig();
+
+        if (diff.length > (config.diffSizeLimit || 2000)) {
             const stagedFiles = await getStagedFiles(scope);
             const selectQuestions = [
                 {
