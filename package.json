@@ -4,8 +4,8 @@
     "description": "An AI-powered developer assistant for code reviews, automating commits, and more.",
     "exports": "./dist/index.js",
     "types": "dist/index.d.ts",
+    "main": "./dist/index.js",
     "type": "module",
-    "main": "./src/index.ts",
     "scripts": {
         "dev": "ts-node dist/index.js",
         "build": "tsc"

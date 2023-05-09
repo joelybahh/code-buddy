@@ -8,12 +8,11 @@ type Config = {
     organization: string;
     model: string;
 };
-
 dotenv.config();
 
 async function loadConfig() {
     try {
-        const config = await import(path.resolve(process.cwd(), "gptc.config.js"));
+        const config = await import(path.resolve(process.cwd(), "cb.config.js"));
         return config.default;
     } catch (error) {
         console.error("Error loading configuration file:", error.message);
@@ -96,7 +95,9 @@ export async function determineCommitMessage(diff: string, scope: string) {
             presence_penalty: 0.5,
         });
         if (response.data.choices && response.data.choices.length > 0) {
-            return response.data.choices[0].message.content.trim();
+            let commitMessage = response.data.choices[0].message.content.trim();
+            commitMessage += `\n\n[🤖 - ${config.model}]`;
+            return commitMessage;
         }
     } catch (error) {
         console.error("Error generating commit message:", error.response.data);

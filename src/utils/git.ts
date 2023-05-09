@@ -13,19 +13,19 @@ export async function stageScopedChanges(scope: string) {
     const files = await getStagedFiles();
     const groups = groupFilesByScope(files);
     const filesToStage = groups[scope] || [];
-    await git.add(filesToStage);
+    return git.add(filesToStage);
 }
 
 export async function getCachedDiff() {
-    return await git.diff(["--cached"]);
+    return git.diff(["--cached"]);
 }
 
 export async function getDiffForFiles(files: string[]) {
-    return await git.diff(["--cached", ...files]);
+    return git.diff(["--cached", ...files]);
 }
 
 export async function commitChanges(message: string) {
-    await git.commit(message);
+    return git.commit(message);
 }
 
 export function groupFilesByScope(files: string[]): Record<string, string[]> {

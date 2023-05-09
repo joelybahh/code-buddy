@@ -2,6 +2,7 @@
 
 import { simpleGit } from "simple-git";
 import chalk from "chalk";
+
 import { commitMessagePrompt, commitPrompts } from "./prompts/index.js";
 import { commitChanges, getStagedFiles, groupFilesByScope } from "./utils/git.js";
 
@@ -60,14 +61,14 @@ function parseArgs(args: string[]): Record<string, string | boolean> {
 
 async function main() {
     switch (process.argv[COMMAND_ARG_INDEX]) {
-        case "commit": {
+        case "commit-all": {
             const parsedArgs = parseArgs(process.argv.slice(OPTIONAL_ARG_START_INDEX));
             const scope = parsedArgs.scope as string | undefined;
 
             commitAll(scope);
             break;
         }
-        case "commit-msg":
+        case "commit":
             {
                 const parsedArgs = parseArgs(process.argv.slice(OPTIONAL_ARG_START_INDEX));
                 const scope = parsedArgs.scope as string | undefined;

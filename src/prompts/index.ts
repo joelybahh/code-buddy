@@ -1,18 +1,19 @@
 import inquirer, { QuestionCollection } from "inquirer";
-import { determineCommitMessage, summariseDescription } from "../utils/openai.js";
-import {
-    getCachedDiff,
-    getDiffForFiles,
-    getStagedFiles,
-    stageScopedChanges,
-} from "../utils/git.js";
 import chalk from "chalk";
+
+import { stageScopedChanges, getDiffForFiles, getStagedFiles } from "../utils/git.js";
+import { logPretty } from "../utils/log.js";
+import { determineCommitMessage, summariseDescription } from "../utils/openai.js";
 
 export async function commitPrompts(scope: string, changes: string[]) {
     const suggestedType = "feat"; // Replace with a function to suggest a commit type based on the changes
 
-    if (scope === ".") console.log(`You are committing changes to the root directory`);
-    else console.log(`You are committing changes for the following scope: ${scope}`);
+    if (scope === ".") logPretty(`You are committing changes from the root directory`, "yellow");
+    else if (scope === "apps")
+        logPretty(`You are committing changes from the apps directory`, "yellow");
+    else if (scope === "packages")
+        logPretty(`You are committing changes frpm the packages directory`, "yellow");
+    else logPretty(`You are committing changes from the ${scope} directory`, "yellow");
 
     console.log(`The following files are being committed: ${changes.join(", ")}`);
     const questions = [

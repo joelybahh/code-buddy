@@ -19,4 +19,4 @@ yarn-debug.log*
 yarn-error.log*
 
 # config
-gptc.config.js
+cb.config.js
