@@ -21,8 +21,8 @@ async function getOpenAI(): Promise<[OpenAIApi, CodeBuddyConfig]> {
     return [
         new OpenAIApi(
             new Configuration({
-                apiKey: config.apiKey,
-                organization: config.organization,
+                apiKey: config.chatGPT.apiKey,
+                organization: config.chatGPT.organization,
             })
         ),
         config,
@@ -52,7 +52,7 @@ export async function summariseDescription(description: string) {
                     role: ChatCompletionRequestMessageRoleEnum.User,
                 },
             ],
-            model: config.model,
+            model: config.chatGPT.model,
             max_tokens: 100,
             temperature: 0.3,
             top_p: 1,
@@ -83,7 +83,7 @@ export async function determineCommitMessage(diff: string, scope: string) {
                     role: ChatCompletionRequestMessageRoleEnum.User,
                 },
             ],
-            model: config.model,
+            model: config.chatGPT.model,
             max_tokens: 100,
             temperature: 0.3,
             top_p: 1,
@@ -92,7 +92,7 @@ export async function determineCommitMessage(diff: string, scope: string) {
         });
         if (response.data.choices && response.data.choices.length > 0) {
             let commitMessage = response.data.choices[0].message.content.trim();
-            commitMessage += `\n\n[🤖 - ${config.model}]`;
+            commitMessage += `\n\n[🤖 - ${config.chatGPT.model}]`;
             return commitMessage;
         }
     } catch (error) {

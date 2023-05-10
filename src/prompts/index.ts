@@ -1,7 +1,12 @@
 import inquirer, { QuestionCollection } from "inquirer";
 import chalk from "chalk";
 
-import { stageScopedChanges, getDiffForFiles, getStagedFiles } from "../utils/git.js";
+import {
+    stageScopedChanges,
+    getDiffForFiles,
+    getStagedFiles,
+    getIssueKeyFromBranchName,
+} from "../utils/git.js";
 import { logPretty } from "../utils/log.js";
 import { determineCommitMessage, loadConfig, summariseDescription } from "../utils/openai.js";
 
@@ -75,7 +80,7 @@ export async function commitMessagePrompt(scope: string) {
 
     const config = await loadConfig();
 
-    if (diff.length > (config.diffSizeLimit || 2000)) {
+    if (diff.length > (config.diff.maxSize || 2000)) {
         const stagedFiles = await getStagedFiles(scope);
         const selectQuestions = [
             {
@@ -94,26 +99,36 @@ export async function commitMessagePrompt(scope: string) {
 
     let commitMessage = await determineCommitMessage(diff, scope.replace("inspace-", ""));
 
-    if (config.useIssueKey) {
-        // Confirm the commit message with the user
-        const confirmHasIssue = [
-            {
-                type: "confirm",
-                name: "confirmHasIssue",
-                message: `Does this commit have an issue key?`,
-                default: true,
-            },
-            {
-                type: "input",
-                name: "issueKey",
-                message: `Please enter the issue key`,
-                when: (answers: any) => answers.confirmHasIssue,
-            },
-        ] as QuestionCollection;
+    if (config.commit.issue) {
+        const { detectKey, fallbackKey, keyRegex } = config.commit.issue;
+        let issueKey = "";
+        if (detectKey) {
+            // TODO: Detect the issue key from the branch name
+            const key = await getIssueKeyFromBranchName(keyRegex);
+            // assign issueKey to config.fallbackIssueKey if issueKey is falsy
+            issueKey = key || fallbackKey;
+        } else {
+            // Confirm the commit message with the user
+            const confirmHasIssue = [
+                {
+                    type: "confirm",
+                    name: "confirmHasIssue",
+                    message: `Does this commit have an issue key?`,
+                    default: true,
+                },
+                {
+                    type: "input",
+                    name: "issueKey",
+                    message: `Please enter the issue key`,
+                    when: (answers: any) => answers.confirmHasIssue,
+                },
+            ] as QuestionCollection;
 
-        // add the issue key to the commit message right before the first line break, if none, add it to the end of the commit message
-        const issueKeyAnswers = await inquirer.prompt(confirmHasIssue);
-        const issueKey = issueKeyAnswers.issueKey;
+            // add the issue key to the commit message right before the first line break, if none, add it to the end of the commit message
+            const issueKeyAnswers = await inquirer.prompt(confirmHasIssue);
+            issueKey = issueKeyAnswers.issueKey;
+        }
+
         const firstLineBreak = commitMessage.indexOf("\n");
         if (firstLineBreak === -1) {
             commitMessage += ` [${issueKey || "no-key"}]`;
@@ -125,7 +140,7 @@ export async function commitMessagePrompt(scope: string) {
         }
     }
 
-    if (!config.sentenceCase) {
+    if (!config.commit.format.sentenceCase) {
         const firstColon = commitMessage.indexOf(":");
         const firstLetterAfterColon = commitMessage[firstColon + 2];
         if (firstLetterAfterColon === firstLetterAfterColon.toUpperCase()) {

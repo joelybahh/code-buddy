@@ -9,6 +9,12 @@ export async function getStagedFiles(scope?: string) {
     return scope ? groupFilesByScope(files)[scope] || [] : files;
 }
 
+export async function getIssueKeyFromBranchName(regexp: RegExp = /[A-Za-z]+-\d+/) {
+    const branchName = (await git.branchLocal()).current;
+    const match = branchName.match(regexp);
+    return match ? match[0] : undefined;
+}
+
 export async function stageScopedChanges(scope: string) {
     const files = await getStagedFiles();
     const groups = groupFilesByScope(files);

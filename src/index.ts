@@ -1,19 +1,30 @@
 #! /usr/bin/env node
 
 import { simpleGit } from "simple-git";
-import chalk from "chalk";
 
 import { commitMessagePrompt } from "./prompts/index.js";
 import { commitChanges, getStagedFiles, groupFilesByScope } from "./utils/git.js";
 
 export type CodeBuddyConfig = {
-    apiKey: string;
-    organization: string;
-    model: "gpt-4" | "gpt-3.5-turbo";
-    scopeTrim: string;
-    diffSizeLimit?: number;
-    useIssueKey?: boolean;
-    sentenceCase?: boolean;
+    chatGPT?: {
+        apiKey: string;
+        organization: string;
+        model: "gpt-4" | "gpt-3.5-turbo";
+    };
+    commit?: {
+        scopeTrim: string;
+        issue?: {
+            detectKey?: boolean;
+            keyRegex?: RegExp;
+            fallbackKey?: string;
+        };
+        format?: {
+            sentenceCase?: boolean;
+        };
+    };
+    diff?: {
+        maxSize?: number;
+    };
 };
 
 async function commitAll() {
