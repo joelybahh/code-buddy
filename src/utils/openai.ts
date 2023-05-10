@@ -121,11 +121,13 @@ The rules for the commit message are as follows:
 - The commit summary needs to start with the appropriate type of commit (feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert) ${
     scope !== "." ? `with the following scope (${scope}) ` : "with no scope "
 }followed by a colon (:). The scope is optional.
-- feat: A new feature
-- fix: A bug fix
-- docs: Documentation only changes, such as README, CHANGELOG, CONTRIBUTING, or code comments
-- style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+
+Commit Types:
+- docs: When the changes affect files of type \`.md\` or pure code comments
 - refactor: A code change that neither fixes a bug nor adds a feature
+- fix: A bug fix
+- feat: A new feature
+- style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - test: Adding missing tests or correcting existing tests
 - chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
 - perf: A code change that improves performance
