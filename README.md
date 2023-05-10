@@ -5,7 +5,7 @@ CodeBuddy is an AI-powered developer assistant for code reviews, automating comm
 ## Features
 
 -   Automatically generate commit messages based on the diff
--   AI-powered assistance for code reviews
+-   AI-powered assistance for code reviews [Coming Soon]
 
 ## Installation
 
