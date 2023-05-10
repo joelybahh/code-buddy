@@ -47,9 +47,6 @@ function parseArgs(args: string[]): Record<string, string | boolean> {
 async function main() {
     switch (process.argv[COMMAND_ARG_INDEX]) {
         case "commit-all": {
-            const parsedArgs = parseArgs(process.argv.slice(OPTIONAL_ARG_START_INDEX));
-            const scope = parsedArgs.scope as string | undefined;
-
             commitAll();
             break;
         }
