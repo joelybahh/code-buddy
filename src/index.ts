@@ -12,6 +12,8 @@ export type CodeBuddyConfig = {
     model: "gpt-4" | "gpt-3.5-turbo";
     scopeTrim: string;
     diffSizeLimit?: number;
+    useIssueKey?: boolean;
+    sentenceCase?: boolean;
 };
 
 async function commitAll() {

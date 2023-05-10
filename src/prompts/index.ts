@@ -66,48 +66,35 @@ export async function commitPrompts(scope: string, changes: string[]) {
 }
 
 export async function commitMessagePrompt(scope: string) {
-    // a set of questions mostly confirming the user wants to commit the changes,
-    // if they say yes, we need to get the commit diff and pass it to the function that generates the commit message
-    const questions = [
-        {
-            type: "confirm",
-            name: "confirmCommit",
-            message: `Are you sure you want to commit the changes for the following scope: ${scope}?`,
-            default: true,
-        },
-    ] as QuestionCollection;
+    await stageScopedChanges(scope);
+    const stagedFiles = await getStagedFiles(scope);
+    let diff = await getDiffForFiles(stagedFiles);
 
-    const answers = await inquirer.prompt(questions);
+    // Check the size of the diff, if its too big, ask the user to select the files they want to use in the diff for the commit message
+    // If the diff is small enough, generate the commit message
 
-    if (answers.confirmCommit) {
-        await stageScopedChanges(scope);
+    const config = await loadConfig();
+
+    if (diff.length > (config.diffSizeLimit || 2000)) {
         const stagedFiles = await getStagedFiles(scope);
-        let diff = await getDiffForFiles(stagedFiles);
+        const selectQuestions = [
+            {
+                type: "checkbox",
+                name: "files",
+                message: chalk.red(
+                    `❌ The diff is too large to generate a commit message (length ${diff.length}). Please select the files you want to use in the commit message.`
+                ),
+                choices: stagedFiles,
+            },
+        ] as QuestionCollection;
 
-        // Check the size of the diff, if its too big, ask the user to select the files they want to use in the diff for the commit message
-        // If the diff is small enough, generate the commit message
+        const filesSelected = await inquirer.prompt(selectQuestions);
+        diff = await getDiffForFiles(filesSelected.files);
+    }
 
-        const config = await loadConfig();
+    let commitMessage = await determineCommitMessage(diff, scope.replace("inspace-", ""));
 
-        if (diff.length > (config.diffSizeLimit || 2000)) {
-            const stagedFiles = await getStagedFiles(scope);
-            const selectQuestions = [
-                {
-                    type: "checkbox",
-                    name: "files",
-                    message: chalk.red(
-                        `❌ The diff is too large to generate a commit message (length ${diff.length}). Please select the files you want to use in the commit message.`
-                    ),
-                    choices: stagedFiles,
-                },
-            ] as QuestionCollection;
-
-            const filesSelected = await inquirer.prompt(selectQuestions);
-            diff = await getDiffForFiles(filesSelected.files);
-        }
-
-        let commitMessage = await determineCommitMessage(diff, scope.replace("inspace-", ""));
-
+    if (config.useIssueKey) {
         // Confirm the commit message with the user
         const confirmHasIssue = [
             {
@@ -136,7 +123,9 @@ export async function commitMessagePrompt(scope: string) {
                 ` [${issueKey || "no-key"}]` +
                 commitMessage.slice(firstLineBreak);
         }
+    }
 
+    if (!config.sentenceCase) {
         const firstColon = commitMessage.indexOf(":");
         const firstLetterAfterColon = commitMessage[firstColon + 2];
         if (firstLetterAfterColon === firstLetterAfterColon.toUpperCase()) {
@@ -145,35 +134,35 @@ export async function commitMessagePrompt(scope: string) {
                 commitMessage[firstColon + 2].toLowerCase() +
                 commitMessage.slice(firstColon + 3);
         }
-        // Use chalk to color the commit message in a log nicely
-        console.log(
-            chalk.green("✨ Generated commit message: \n") + chalk.bold.yellow(commitMessage) + "\n"
-        );
+    }
 
-        const confirmCommitMessage = [
+    console.log(
+        chalk.green("✨ Generated commit message: \n") + chalk.bold.yellow(commitMessage) + "\n"
+    );
+
+    const confirmCommitMessage = [
+        {
+            type: "confirm",
+            name: "confirmCommitMessage",
+            message: "Would you like to use it?",
+            default: true,
+        },
+    ];
+
+    const confirmCommitMessageAnswers = await inquirer.prompt(confirmCommitMessage);
+
+    if (confirmCommitMessageAnswers.confirmCommitMessage) {
+        return commitMessage;
+    } else {
+        const customCommitMessage = [
             {
-                type: "confirm",
-                name: "confirmCommitMessage",
-                message: "Would you like to use it?",
-                default: true,
+                type: "input",
+                name: "commitMessage",
+                message: "Please write your commit message.",
             },
-        ];
+        ] as QuestionCollection;
 
-        const confirmCommitMessageAnswers = await inquirer.prompt(confirmCommitMessage);
-
-        if (confirmCommitMessageAnswers.confirmCommitMessage) {
-            return commitMessage;
-        } else {
-            const customCommitMessage = [
-                {
-                    type: "input",
-                    name: "commitMessage",
-                    message: "Please write your commit message.",
-                },
-            ] as QuestionCollection;
-
-            const customCommitMessageAnswers = await inquirer.prompt(customCommitMessage);
-            return customCommitMessageAnswers.commitMessage;
-        }
+        const customCommitMessageAnswers = await inquirer.prompt(customCommitMessage);
+        return customCommitMessageAnswers.commitMessage;
     }
 }
