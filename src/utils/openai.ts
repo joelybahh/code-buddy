@@ -117,7 +117,7 @@ A commit message follows the below structure:
 
 The rules for the commit message are as follows:
 - A commit summary should be less than 100 characters long. 
-- A commit description should be less than 100 characters long.
+- A commit description should be less than 90 characters long.
 - The commit summary needs to start with the appropriate type of commit (feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert) ${
     scope !== "." ? `with the following scope (${scope}) ` : "with no scope "
 }followed by a colon (:). The scope is optional.
