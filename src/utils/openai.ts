@@ -21,8 +21,8 @@ async function getOpenAI(): Promise<[OpenAIApi, CodeBuddyConfig]> {
     return [
         new OpenAIApi(
             new Configuration({
-                apiKey: config.apiKey,
-                organization: config.organization,
+                apiKey: config.chatGPT.apiKey,
+                organization: config.chatGPT.organization,
             })
         ),
         config,
@@ -52,7 +52,7 @@ export async function summariseDescription(description: string) {
                     role: ChatCompletionRequestMessageRoleEnum.User,
                 },
             ],
-            model: config.model,
+            model: config.chatGPT.model,
             max_tokens: 100,
             temperature: 0.3,
             top_p: 1,
@@ -83,7 +83,7 @@ export async function determineCommitMessage(diff: string, scope: string) {
                     role: ChatCompletionRequestMessageRoleEnum.User,
                 },
             ],
-            model: config.model,
+            model: config.chatGPT.model,
             max_tokens: 100,
             temperature: 0.3,
             top_p: 1,
@@ -92,7 +92,7 @@ export async function determineCommitMessage(diff: string, scope: string) {
         });
         if (response.data.choices && response.data.choices.length > 0) {
             let commitMessage = response.data.choices[0].message.content.trim();
-            commitMessage += `\n\n[🤖 - ${config.model}]`;
+            commitMessage += `\n\n[🤖 - ${config.chatGPT.model}]`;
             return commitMessage;
         }
     } catch (error) {
@@ -105,7 +105,7 @@ export async function determineCommitMessage(diff: string, scope: string) {
 const getCommitMessagePrompt = (
     diff: string,
     scope: string
-) => `You are a developer who needs to write a commit message for the following changes that provide enough a glance context to developers but strive yourself on being comprehensive so try your best to add as much detail as possible.
+) => `You are a developer who needs to write a commit message for the following changes that provide enough a glance context to developers but strive yourself on being comprehensive but concise.
 
 Below is a diff of your changes:
 \`${diff}\`
@@ -116,16 +116,18 @@ A commit message follows the below structure:
 {commit_description}\`
 
 The rules for the commit message are as follows:
-- A commit summary should be less than 100 characters long. 
-- A commit description should be less than 90 characters long.
+- A commit summary should be concise. 
+- A commit description should also be concise.
 - The commit summary needs to start with the appropriate type of commit (feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert) ${
     scope !== "." ? `with the following scope (${scope}) ` : "with no scope "
 }followed by a colon (:). The scope is optional.
-- feat: A new feature
-- fix: A bug fix
-- docs: Documentation only changes, such as README, CHANGELOG, CONTRIBUTING, or code comments
-- style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+
+Commit Types:
+- docs: When the changes affect files of type \`.md\` or pure code comments
 - refactor: A code change that neither fixes a bug nor adds a feature
+- fix: A bug fix
+- feat: A new feature
+- style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - test: Adding missing tests or correcting existing tests
 - chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
 - perf: A code change that improves performance
