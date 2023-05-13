@@ -42,9 +42,14 @@ CodeBuddy can be configured using a `cb.config.js` file in the root of your proj
         format?: {
             sentenceCase?: boolean;
         };
+        scope?: {
+            mode?: "monorepo" | "traditional";
+            srcDir?: string;
+        }
     };
     diff?: {
         maxSize?: number;
+        exclude?: string[];
     };
 }
 ```
@@ -68,12 +73,16 @@ This object contains properties related to commit message generation and formatt
     -   `fallbackKey` (string, optional): A fallback issue key to use if none is detected in the branch name.
 -   `format` (optional): An object containing properties related to commit message text formatting.
     -   `sentenceCase` (boolean, optional): If `false`, the first letter of the commit message will be in lowercase.
+-   `scope`
+    -   `mode` (string, optional): The commit scope mode, either `"monorepo"` or `"traditional"`. If `"monorepo"`, the scope will be the name of the package. If `"traditional"`, the scope will be the name of the directory containing the changed files. Defaults to `"monorepo"`.
+    -   `srcDir` (string, optional): The source directory for the commit scope. Only used in `"traditional"` mode. Defaults to `"src"`.
 
 ### diff (optional)
 
 This object contains properties related to the diff.
 
 -   `maxSize` (number, optional): The maximum size (in bytes) of the diff that can be sent to the GPT model. If the diff exceeds this size, an error will be thrown.
+-   `exclude` (string[], optional): An array of file paths to exclude from the diff.
 
 ## Usage
 

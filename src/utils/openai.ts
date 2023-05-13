@@ -2,7 +2,7 @@ import { ChatCompletionRequestMessageRoleEnum, Configuration, OpenAIApi } from "
 
 import * as dotenv from "dotenv";
 import path from "path";
-import { CodeBuddyConfig } from "../index.js";
+import { CodeBuddyConfig } from "../types/index.js";
 
 dotenv.config();
 

@@ -1,3 +1,3 @@
 export * from "./openai.js";
 export * from "./git.js";
-export * from "./log.js";
+export * from "./config.js";
