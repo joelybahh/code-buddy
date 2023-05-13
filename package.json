@@ -37,7 +37,6 @@
     "dependencies": {
         "chalk": "^5.2.0",
         "commander": "^10.0.1",
-        "dotenv": "^16.0.3",
         "inquirer": "^9.2.1",
         "openai": "^3.2.1",
         "simple-git": "^3.18.0"
@@ -46,6 +45,7 @@
         "@types/chalk": "^2.2.0",
         "@types/inquirer": "^9.0.3",
         "@types/node": "^18.16.3",
+        "dotenv": "^16.0.3",
         "prettier": "^2.8.8",
         "ts-node": "^10.9.1",
         "typescript": "^5.0.4"
