@@ -14,9 +14,7 @@ export async function applyIssueKey(
     const { detectKey, fallbackKey, keyRegex } = issueConfig;
     let issueKey = "";
     if (detectKey) {
-        // TODO: Detect the issue key from the branch name
         const key = await getIssueKeyFromBranchName(keyRegex);
-        // assign issueKey to config.fallbackIssueKey if issueKey is falsy
         issueKey = key || fallbackKey;
     } else {
         // Confirm the commit message with the user

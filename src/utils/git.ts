@@ -3,12 +3,19 @@ import { determineCommitMessage } from "./openai.js";
 
 const git = simpleGit();
 
+enum StagedFileType {
+    AllExceptDeleted = "allExceptDeleted",
+    Modified = "modified",
+    Deleted = "deleted",
+    All = "all",
+}
+
 /**
  * Get staged files.
  * @param {string} scope - The scope to group files by.
  * @returns {Promise<string[]>} A promise that resolves to an array of staged files.
  */
-export async function getStagedFiles(scope?: string): Promise<string[]> {
+export async function getStagedFiles(type?: StagedFileType, scope?: string): Promise<string[]> {
     let status: StatusResult;
 
     try {
@@ -17,8 +24,22 @@ export async function getStagedFiles(scope?: string): Promise<string[]> {
         console.error("Error getting git status:", error);
         return [];
     }
+    let files: string[] = status.files.map((file: FileStatusResult) => file.path);
 
-    const files = status.files.map((file: FileStatusResult) => file.path);
+    switch (type) {
+        default:
+        case StagedFileType.All:
+            break;
+        case StagedFileType.AllExceptDeleted:
+            files = files.filter((file) => !status.deleted.includes(file));
+            break;
+        case StagedFileType.Modified:
+            files = status.modified;
+            break;
+        case StagedFileType.Deleted:
+            files = status.deleted;
+            break;
+    }
 
     return scope ? groupFilesByScope(files)[scope] || [] : files;
 }
@@ -42,32 +63,6 @@ export async function getIssueKeyFromBranchName(
 
     const match = branchName.match(regexp);
     return match ? match[0] : undefined;
-}
-
-/**
- * Stage scoped changes.
- * @param {string} scope - The scope of changes to stage.
- * @returns {Promise<string | undefined>} A promise that resolves to the result of git.add or undefined.
- */
-export async function stageScopedChanges(scope: string): Promise<string | undefined> {
-    let files: string[];
-
-    try {
-        files = await getStagedFiles(scope);
-    } catch (error) {
-        console.error("Error getting staged files:", error);
-        return undefined;
-    }
-
-    const groups = groupFilesByScope(files);
-    const filesToStage = groups[scope] || [];
-
-    try {
-        return git.add(filesToStage);
-    } catch (error) {
-        console.error("Error staging files:", error);
-        return undefined;
-    }
 }
 
 /**
@@ -213,13 +208,25 @@ export async function commitAll(
     confirmCommit: (message: string) => Promise<boolean>,
     reduceDiff: (diff: string, files: string[]) => Promise<string>
 ): Promise<void> {
-    const files = await getStagedFiles();
-    const groups = await groupFilesByScope(files);
+    const allExceptDeleted = await getStagedFiles(StagedFileType.AllExceptDeleted);
+    const deleted = await getStagedFiles(StagedFileType.Deleted);
+
+    // Store all files for grouping convinience
+    const allFiles = [...allExceptDeleted, ...deleted];
+    const groups = await groupFilesByScope(allFiles);
 
     for (const scope in groups) {
+        const currentFiles = groups[scope];
+        const filesToAdd = currentFiles.filter((file) => !deleted.includes(file));
+        const filesToRemove = currentFiles.filter((file) => !allExceptDeleted.includes(file));
+
         const confirmedScope = await confirmScope(scope);
         if (confirmedScope) {
-            await git.add(groups[scope]);
+            if (filesToAdd.length > 0)
+                await git.add(currentFiles.filter((file) => !deleted.includes(file)));
+            if (filesToRemove.length > 0)
+                await git.rm(currentFiles.filter((file) => !allExceptDeleted.includes(file)));
+
             let diff = await getDiffForFiles(groups[scope]);
             diff = await reduceDiff(diff, groups[scope]);
             await commit(diff, scope, confirmCommit);
