@@ -89,16 +89,10 @@ This object contains properties related to the diff.
 To use CodeBuddy, run the following command:
 
 ```
-cb commit
-```
-
-This will prompt you to answer a few questions and then generate a commit message based on your input and the diff.
-
-```
 cb commit-all
 ```
 
-this will do a git add for every detected scope, and run the same prompts as cb commit, but for every available scope.
+this will do a git add for every detected scope, and generate a commit message, but for every available scope.
 
 ## Version
 
