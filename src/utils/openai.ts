@@ -1,10 +1,7 @@
 import { ChatCompletionRequestMessageRoleEnum, Configuration, OpenAIApi } from "openai";
 
-import * as dotenv from "dotenv";
 import path from "path";
 import { CodeBuddyConfig } from "../types/index.js";
-
-dotenv.config();
 
 export async function loadConfig(): Promise<CodeBuddyConfig> {
     try {
