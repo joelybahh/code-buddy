@@ -2,7 +2,7 @@
 
 All notable changes to the CodeBuddy project will be documented in this file.
 
-## [0.3.0] - 10/05/2023
+## [0.3.0] - 13/05/2023
 
 ### Added
 
@@ -16,6 +16,14 @@ All notable changes to the CodeBuddy project will be documented in this file.
 ### Changed
 
 -   Refactored the `index.ts` to use `commander` for CLI argument parsing and built in help.
+
+### Fixed
+
+-   Fixed a bug where deleted files were incorrectly being sent through `git.add`
+
+### Removed
+
+-   Removed various unused utility functions from `utils/git.ts`
 
 ## [0.2.0] - 10/05/2023
 
