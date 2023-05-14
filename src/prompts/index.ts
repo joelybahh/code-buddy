@@ -3,7 +3,7 @@ import chalk from "chalk";
 
 import { getDiffForFiles, getIssueKeyFromBranchName, commitAll } from "../utils/git.js";
 import { loadConfig } from "../utils/openai.js";
-import { applyIssueKey, applySentenceCase } from "../utils/config.js";
+import { applyEmoji, applyIssueKey, applySentenceCase } from "../utils/config.js";
 
 async function scopeConfirmationPrompt(scope: string) {
     const confirmScope = [
@@ -19,18 +19,22 @@ async function scopeConfirmationPrompt(scope: string) {
     return confirmScopeAnswers.confirmScope;
 }
 
-async function commitConfirmationPrompt(message: string) {
+async function commitConfirmationPrompt(message: string): Promise<[string, boolean]> {
     const config = await loadConfig();
 
     if (config.commit.issue) {
-        await applyIssueKey(message, config.commit.issue);
+        message = await applyIssueKey(message, config.commit.issue);
     }
 
     if (!config.commit.format.sentenceCase) {
-        applySentenceCase(message);
+        message = applySentenceCase(message);
     }
 
-    console.log(chalk.green("✨ Generated commit message: \n") + chalk.bold.yellow(message) + "\n");
+    if (config.commit.format.useEmoji) {
+        message = applyEmoji(message);
+    }
+
+    console.log(chalk.green("✅ Successfully Generated \n\n") + chalk.bold.yellow(message) + "\n");
 
     const confirmCommitMessage = [
         {
@@ -43,7 +47,7 @@ async function commitConfirmationPrompt(message: string) {
 
     const confirmCommitMessageAnswers = await inquirer.prompt(confirmCommitMessage);
 
-    return confirmCommitMessageAnswers.confirmCommitMessage;
+    return [message, confirmCommitMessageAnswers.confirmCommitMessage];
 }
 
 async function diffSizePrompt(diff: string, files: string[]) {
@@ -71,6 +75,13 @@ async function diffSizePrompt(diff: string, files: string[]) {
     return await getDiffForFiles(filesSelected.files);
 }
 
-export async function commitAllPrompts() {
-    await commitAll(scopeConfirmationPrompt, commitConfirmationPrompt, diffSizePrompt);
+export async function commitAllPrompts(...args: any[]) {
+    const [optionalArgs] = args;
+
+    await commitAll(
+        scopeConfirmationPrompt,
+        commitConfirmationPrompt,
+        diffSizePrompt,
+        optionalArgs
+    );
 }
