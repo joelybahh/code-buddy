@@ -16,6 +16,7 @@ export type CodeBuddyConfig = {
         };
         format?: {
             sentenceCase?: boolean;
+            useEmoji?: boolean;
         };
         scope?: {
             mode: ScopeMode;
@@ -35,3 +36,64 @@ export enum ScopeMode {
     Monorepo = "monorepo",
     Traditional = "traditional",
 }
+
+/**
+ * An enum representing the different types of commits.
+ */
+export enum CommitType {
+    Feature = "feat",
+    Fix = "fix",
+    Docs = "docs",
+    Style = "style",
+    Refactor = "refactor",
+    Perf = "perf",
+    Test = "test",
+    Chore = "chore",
+    Ci = "ci",
+    Build = "build",
+    Revert = "revert",
+}
+
+/**
+ * A string literal type representing the different types of commits.
+ */
+export type TCommitType =
+    | CommitType.Feature
+    | CommitType.Fix
+    | CommitType.Docs
+    | CommitType.Build
+    | CommitType.Style
+    | CommitType.Refactor
+    | CommitType.Perf
+    | CommitType.Test
+    | CommitType.Chore
+    | CommitType.Ci
+    | CommitType.Revert;
+
+/**
+ * A record mapping commit types to their emoji.
+ */
+export const COMMIT_TYPE_EMOJIS: Record<CommitType, string> = {
+    [CommitType.Feature]: "🎉",
+    [CommitType.Fix]: "🐛",
+    [CommitType.Docs]: "📚",
+    [CommitType.Style]: "💄",
+    [CommitType.Refactor]: "🧹",
+    [CommitType.Perf]: "🚀",
+    [CommitType.Test]: "🧪",
+    [CommitType.Chore]: "🧹",
+    [CommitType.Ci]: "🤖",
+    [CommitType.Build]: "🏗️",
+    [CommitType.Revert]: "⏪",
+};
+
+/**
+ * A type representing the optional arguments for the `commit-all` command.
+ */
+export type OptionalArgs = {
+    breaking?: boolean;
+    message?: string;
+    scope?: string;
+    issue?: string;
+    type?: TCommitType;
+};
