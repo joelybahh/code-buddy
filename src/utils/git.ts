@@ -94,7 +94,8 @@ export async function commitChanges(message: string): Promise<CommitResult | und
 }
 
 import { loadConfig } from "../utils/openai.js";
-import { ScopeMode } from "../types/index.js";
+import { OptionalArgs, ScopeMode } from "../types/index.js";
+import chalk from "chalk";
 
 /**
  * Group files by scope for a monorepo structure.
@@ -176,18 +177,23 @@ export async function groupFilesByScope(files: string[]): Promise<Record<string,
 export async function commit(
     diff: string,
     scope: string,
-    confirmCommit: (message: string) => Promise<boolean>
+    confirmCommit: (message: string) => Promise<[string, boolean]>
 ): Promise<void> {
     let confirmed = false;
     let commitMessage = "";
 
     while (!confirmed) {
+        console.log(chalk.yellow("✨ Generating commit message..."));
         commitMessage = await determineCommitMessage(diff, scope);
         if (!commitMessage) {
-            console.error("Unable to generate commit message.");
+            console.error("❌ Unable to generate commit message.");
             return;
         }
-        confirmed = await confirmCommit(commitMessage);
+        const [message, accepted] = await confirmCommit(commitMessage);
+        if (accepted) {
+            commitMessage = message;
+            confirmed = true;
+        }
     }
 
     try {
@@ -205,8 +211,9 @@ export async function commit(
  */
 export async function commitAll(
     confirmScope: (scope: string) => Promise<boolean>,
-    confirmCommit: (message: string) => Promise<boolean>,
-    reduceDiff: (diff: string, files: string[]) => Promise<string>
+    confirmCommit: (message: string) => Promise<[string, boolean]>,
+    reduceDiff: (diff: string, files: string[]) => Promise<string>,
+    args: OptionalArgs
 ): Promise<void> {
     const allExceptDeleted = await getStagedFiles(StagedFileType.AllExceptDeleted);
     const deleted = await getStagedFiles(StagedFileType.Deleted);
@@ -215,12 +222,16 @@ export async function commitAll(
     const allFiles = [...allExceptDeleted, ...deleted];
     const groups = await groupFilesByScope(allFiles);
 
+    const { breaking, issue, message, scope: scopeOverride, type } = args;
+
     for (const scope in groups) {
+        if (scopeOverride && scope !== scopeOverride) continue;
+
         const currentFiles = groups[scope];
         const filesToAdd = currentFiles.filter((file) => !deleted.includes(file));
         const filesToRemove = currentFiles.filter((file) => !allExceptDeleted.includes(file));
 
-        const confirmedScope = await confirmScope(scope);
+        const confirmedScope = scopeOverride ? true : await confirmScope(scope);
         if (confirmedScope) {
             if (filesToAdd.length > 0)
                 await git.add(currentFiles.filter((file) => !deleted.includes(file)));

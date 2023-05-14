@@ -1,5 +1,5 @@
 import inquirer, { QuestionCollection } from "inquirer";
-import { CodeBuddyConfig } from "../types/index.js";
+import { CodeBuddyConfig, COMMIT_TYPE_EMOJIS, CommitType } from "../types/index.js";
 import { getIssueKeyFromBranchName } from "./git.js";
 
 /**
@@ -47,6 +47,8 @@ export async function applyIssueKey(
             ` [${issueKey || fallbackKey}]` +
             message.slice(firstLineBreak);
     }
+
+    return message;
 }
 
 /**
@@ -62,4 +64,19 @@ export function applySentenceCase(message: string) {
             message[firstColon + 2].toLowerCase() +
             message.slice(firstColon + 3);
     }
+
+    return message;
+}
+
+export function applyEmoji(message: string) {
+    const firstColon = message.indexOf(":");
+
+    const typeAndScope = message.slice(0, firstColon);
+    const [type] = typeAndScope.split("(");
+
+    const emoji = COMMIT_TYPE_EMOJIS[type as CommitType];
+
+    message = message.slice(0, firstColon + 1) + " " + emoji + message.slice(firstColon + 1);
+
+    return message;
 }

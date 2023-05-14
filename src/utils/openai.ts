@@ -88,9 +88,7 @@ export async function determineCommitMessage(diff: string, scope: string) {
             presence_penalty: 0.5,
         });
         if (response.data.choices && response.data.choices.length > 0) {
-            let commitMessage = response.data.choices[0].message.content.trim();
-            commitMessage += `\n\n[🤖 - ${config.chatGPT.model}]`;
-            return commitMessage;
+            return response.data.choices[0].message.content.trim();
         }
     } catch (error) {
         console.error("Error generating commit message:", error.response.data);
