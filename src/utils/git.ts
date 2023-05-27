@@ -188,14 +188,17 @@ export async function groupFilesByScope(files: string[]): Promise<Record<string,
 export async function commit(
     diff: string,
     scope: string,
-    confirmCommit: (message: string) => Promise<[string, boolean]>
+    confirmCommit: (message: string) => Promise<[string, boolean]>,
+    args: OptionalArgs
 ): Promise<void> {
     let confirmed = false;
     let commitMessage = "";
 
+    const { breaking, issue, message, type } = args;
+
     while (!confirmed) {
         console.log(chalk.yellow("✨ Generating commit message..."));
-        commitMessage = await determineCommitMessage(diff, scope);
+        commitMessage = await determineCommitMessage(diff, scope, type);
         if (!commitMessage) {
             console.error("❌ Unable to generate commit message.");
             return;
@@ -251,7 +254,7 @@ export async function commitAll(
 
             let diff = await getDiffForFiles(filesToAdd);
             diff = await reduceDiff(diff, groups[scope]);
-            await commit(diff, scope, confirmCommit);
+            await commit(diff, scope, confirmCommit, args);
         }
     }
 }
