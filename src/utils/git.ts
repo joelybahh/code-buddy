@@ -94,17 +94,29 @@ export async function commitChanges(message: string): Promise<CommitResult | und
 }
 
 import { loadConfig } from "../utils/openai.js";
-import { ScopeMode } from "../types/index.js";
+import { OptionalArgs, ScopeMode } from "../types/index.js";
+import chalk from "chalk";
 
 /**
  * Group files by scope for a monorepo structure.
  * @param {string} file - The file to get the scope from.
+ * @param {string[]} directories - An array of directories for the regex.
  * @returns {string | undefined} The scope of the file.
  */
-function getScopeMonorepo(file: string): string | undefined {
-    const scopeMatch = file.match(/^(?:apps\/([^\/]+)|packages\/([^\/]+)|functions\/([^\/]+))/);
+function getScopeMonorepo(
+    file: string,
+    directories = ["apps", "packages", "functions"]
+): string | undefined {
+    const regexStr = directories.map((directory) => `(?:${directory}\/([^\/]+))`).join("|");
+    const scopeMatch = file.match(new RegExp(`^${regexStr}`));
+
     if (scopeMatch) {
-        return scopeMatch[1] || scopeMatch[2] || scopeMatch[3];
+        // Matched groups start from index 1. As such, we need to return the first non-undefined group.
+        for (let i = 1; i < scopeMatch.length; i++) {
+            if (scopeMatch[i]) {
+                return scopeMatch[i];
+            }
+        }
     }
 }
 
@@ -176,18 +188,26 @@ export async function groupFilesByScope(files: string[]): Promise<Record<string,
 export async function commit(
     diff: string,
     scope: string,
-    confirmCommit: (message: string) => Promise<boolean>
+    confirmCommit: (message: string) => Promise<[string, boolean]>,
+    args: OptionalArgs
 ): Promise<void> {
     let confirmed = false;
     let commitMessage = "";
 
+    const { breaking, issue, message, type, reason } = args;
+
     while (!confirmed) {
-        commitMessage = await determineCommitMessage(diff, scope);
+        console.log(chalk.yellow("✨ Generating commit message..."));
+        commitMessage = await determineCommitMessage(diff, scope, type, reason);
         if (!commitMessage) {
-            console.error("Unable to generate commit message.");
+            console.error("❌ Unable to generate commit message.");
             return;
         }
-        confirmed = await confirmCommit(commitMessage);
+        const [message, accepted] = await confirmCommit(commitMessage);
+        if (accepted) {
+            commitMessage = message;
+            confirmed = true;
+        }
     }
 
     try {
@@ -205,8 +225,9 @@ export async function commit(
  */
 export async function commitAll(
     confirmScope: (scope: string) => Promise<boolean>,
-    confirmCommit: (message: string) => Promise<boolean>,
-    reduceDiff: (diff: string, files: string[]) => Promise<string>
+    confirmCommit: (message: string) => Promise<[string, boolean]>,
+    reduceDiff: (diff: string, files: string[]) => Promise<string>,
+    args: OptionalArgs
 ): Promise<void> {
     const allExceptDeleted = await getStagedFiles(StagedFileType.AllExceptDeleted);
     const deleted = await getStagedFiles(StagedFileType.Deleted);
@@ -215,21 +236,25 @@ export async function commitAll(
     const allFiles = [...allExceptDeleted, ...deleted];
     const groups = await groupFilesByScope(allFiles);
 
+    const { breaking, issue, message, scope: scopeOverride, type } = args;
+
     for (const scope in groups) {
+        if (scopeOverride && scope !== scopeOverride) continue;
+
         const currentFiles = groups[scope];
         const filesToAdd = currentFiles.filter((file) => !deleted.includes(file));
         const filesToRemove = currentFiles.filter((file) => !allExceptDeleted.includes(file));
 
-        const confirmedScope = await confirmScope(scope);
+        const confirmedScope = scopeOverride ? true : await confirmScope(scope);
         if (confirmedScope) {
             if (filesToAdd.length > 0)
                 await git.add(currentFiles.filter((file) => !deleted.includes(file)));
             if (filesToRemove.length > 0)
                 await git.rm(currentFiles.filter((file) => !allExceptDeleted.includes(file)));
 
-            let diff = await getDiffForFiles(groups[scope]);
+            let diff = await getDiffForFiles(filesToAdd);
             diff = await reduceDiff(diff, groups[scope]);
-            await commit(diff, scope, confirmCommit);
+            await commit(diff, scope, confirmCommit, args);
         }
     }
 }

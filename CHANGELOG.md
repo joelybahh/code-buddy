@@ -2,6 +2,24 @@
 
 All notable changes to the CodeBuddy project will be documented in this file.
 
+## [0.4.0] - 27/05/2023
+
+### Added
+
+-   New `applyConfigTransform` and `applyConfigTransformAsync` functions to handle synchronous and asynchronous config transformations respectively.
+-   New `applyScopeTrim` function for trimming specific strings from the commit scope.
+-   Updated `getScopeMonorepo` in `git.ts` to accept an array of directories for better customization.
+-   Added support for emoji in commit messages, enhancing their visual appeal.
+-   Added an optional `reason` argument to the `determineCommitMessage` function in `src/utils/openai.ts` to provide additional context for the generated commit messages.
+    -   This feature allows AI-generated commits to be coupled with a reason, providing business context where needed.
+-   Added an optional `type` argument to the `determineCommitMessage` function in `src/utils/openai.ts` to provide a commit type for the generated commit messages.
+    -   This feature allows AI-generated commits to be grounded in a specific type, improving the quality of the generated commit messages.
+
+### Changed
+
+-   Refactored `commitConfirmationPrompt` function in `src/prompts/index.ts` to use `applyConfigTransform` and `applyConfigTransformAsync` for applying configuration settings to the generated commit message. This change improves code readability and maintainability.
+-   Updated the function signature and prompt generation in `determineCommitMessage` to include the reason when provided.
+
 ## [0.3.0] - 13/05/2023
 
 ### Added

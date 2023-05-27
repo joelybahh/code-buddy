@@ -67,10 +67,28 @@ export async function summariseDescription(description: string) {
     return ""; // Return an empty string if GPT is unable to generate a summary
 }
 
-// A function that takes in the git diff as input and returns a list of files that have been changed and the changes, and asks GPT to come up with a commit message based on the changes.
-export async function determineCommitMessage(diff: string, scope: string) {
+/**
+ * This function generates a commit message for a given diff, scope and type.
+ *
+ * @param diff The diff to generate a commit message for
+ * @param scope The scope of the commit
+ * @param type The type of the commit
+ *
+ * @returns The generated commit message
+ *
+ * @remarks
+ * This function uses the OpenAI API to generate a commit message for a given diff, scope and type.
+ * The type is optional, but if provided, will help GPT generate a more accurate commit message by grounding the commit message
+ * in the type. If none is provided, GPT will generate a commit message and try to determine the type of the commit message.
+ */
+export async function determineCommitMessage(
+    diff: string,
+    scope: string,
+    type?: string,
+    reason?: string
+) {
     const [openai, config] = await getOpenAI();
-    const prompt = getCommitMessagePrompt(diff, scope);
+    const prompt = getCommitMessagePrompt(diff, scope, type, reason);
 
     try {
         const response = await openai.createChatCompletion({
@@ -88,9 +106,7 @@ export async function determineCommitMessage(diff: string, scope: string) {
             presence_penalty: 0.5,
         });
         if (response.data.choices && response.data.choices.length > 0) {
-            let commitMessage = response.data.choices[0].message.content.trim();
-            commitMessage += `\n\n[🤖 - ${config.chatGPT.model}]`;
-            return commitMessage;
+            return response.data.choices[0].message.content.trim();
         }
     } catch (error) {
         console.error("Error generating commit message:", error.response.data);
@@ -99,27 +115,22 @@ export async function determineCommitMessage(diff: string, scope: string) {
     return ""; // Return an empty string if GPT is unable to generate a commit message
 }
 
-const getCommitMessagePrompt = (
-    diff: string,
-    scope: string
-) => `You are a developer who needs to write a commit message for the following changes that provide enough a glance context to developers but strive yourself on being comprehensive but concise.
+const commitTypeDescriptions = {
+    docs: "You're updating documentation or code comments.",
+    refactor: "You're making a code change that neither fixes a bug nor adds a feature.",
+    fix: "You're fixing a bug.",
+    feat: "You're adding a new feature.",
+    style: "You're making changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc).",
+    test: "You're adding missing tests or correcting existing tests.",
+    chore: "You're making changes to the build process or auxiliary tools and libraries such as documentation generation.",
+    perf: "You're making a code change that improves performance.",
+    ci: "You're making changes to your CI configuration files and scripts.",
+    build: "You're making changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm).",
+    revert: "You're reverting a previous commit.",
+};
 
-Below is a diff of your changes:
-\`${diff}\`
-
-A commit message follows the below structure:
-\`{commit_summary}
-
-{commit_description}\`
-
-The rules for the commit message are as follows:
-- A commit summary should be concise. 
-- A commit description should also be concise.
-- The commit summary needs to start with the appropriate type of commit (feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert) ${
-    scope !== "." ? `with the following scope (${scope}) ` : "with no scope "
-}followed by a colon (:). The scope is optional.
-
-Commit Types:
+const getCommitMessagePrompt = (diff: string, scope: string, type?: string, reason?: string) => {
+    let commitTypes = `Commit Types:
 - docs: When the changes affect files of type \`.md\` or pure code comments
 - refactor: A code change that neither fixes a bug nor adds a feature
 - fix: A bug fix
@@ -132,3 +143,42 @@ Commit Types:
 - build: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
 - revert: Reverts a previous commit
 `;
+
+    let typeSpecificGuidelines = "";
+
+    if (type) {
+        commitTypes = "";
+        typeSpecificGuidelines = `The commit is of type "${type}", so the summary should clearly indicate what changes were made under this type. ${commitTypeDescriptions[type]}. The description should provide a brief explanation of the changes, highlighting the main points and reasoning behind the changes made.`;
+    }
+
+    let reasonDescription = "";
+    if (reason) {
+        reasonDescription = `The changes were made because ${reason}. `;
+    }
+
+    return `You are a developer who needs to write a commit message for the following changes that provide enough context to developers, aiming to be comprehensive yet concise.
+
+Below is a diff of your changes:
+\`${diff}\`
+
+A commit message follows the structure:
+\`{commit_summary}
+
+- {commit_description}\`
+
+The rules for the commit message are as follows:
+- A commit summary should be concise. 
+- A commit description should also be concise.
+- ${
+        type
+            ? `In this case, the commit summary needs to start with "${type}". `
+            : "The commit summary needs to start with the appropriate type of commit (feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert). "
+    }${
+        scope !== "."
+            ? `It should also include the following scope (${scope}). `
+            : "It can also be without any scope. "
+    }This should be followed by a colon (:). The scope is optional.
+${reasonDescription}
+${typeSpecificGuidelines}
+${commitTypes}`;
+};

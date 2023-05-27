@@ -1,9 +1,17 @@
 import inquirer, { QuestionCollection } from "inquirer";
 import chalk from "chalk";
 
-import { getDiffForFiles, getIssueKeyFromBranchName, commitAll } from "../utils/git.js";
+import { getDiffForFiles, commitAll } from "../utils/git.js";
 import { loadConfig } from "../utils/openai.js";
-import { applyIssueKey, applySentenceCase } from "../utils/config.js";
+import {
+    applyConfigTransform,
+    applyConfigTransformAsync,
+    applyEmoji,
+    applyIssueKey,
+    applyScopeTrim,
+    applySentenceCase,
+    isTruthy,
+} from "../utils/config.js";
 
 async function scopeConfirmationPrompt(scope: string) {
     const confirmScope = [
@@ -19,19 +27,25 @@ async function scopeConfirmationPrompt(scope: string) {
     return confirmScopeAnswers.confirmScope;
 }
 
-async function commitConfirmationPrompt(message: string) {
+async function commitConfirmationPrompt(message: string): Promise<[string, boolean]> {
     const config = await loadConfig();
 
-    if (config.commit.issue) {
-        await applyIssueKey(message, config.commit.issue);
-    }
+    // Extract config values
+    const issue = config?.commit?.issue;
+    const sentenceCase = config?.commit?.format?.sentenceCase;
+    const scopeTrim = config?.commit?.scopeTrim;
+    const emoji = config?.commit?.format?.useEmoji;
 
-    if (!config.commit.format.sentenceCase) {
-        applySentenceCase(message);
-    }
+    // Apply config transforms
+    // prettier-ignore
+    message = await applyConfigTransformAsync(message, isTruthy(issue), applyIssueKey, config.commit);
+    message = applyConfigTransform(message, isTruthy(sentenceCase), applySentenceCase);
+    message = applyConfigTransform(message, isTruthy(scopeTrim), applyScopeTrim, scopeTrim);
+    message = applyConfigTransform(message, isTruthy(emoji), applyEmoji, emoji);
 
-    console.log(chalk.green("✨ Generated commit message: \n") + chalk.bold.yellow(message) + "\n");
+    console.log(chalk.green("✅ Successfully Generated \n\n") + chalk.bold.yellow(message) + "\n");
 
+    // Ask user if they want to use the generated commit message
     const confirmCommitMessage = [
         {
             type: "confirm",
@@ -40,10 +54,9 @@ async function commitConfirmationPrompt(message: string) {
             default: true,
         },
     ];
-
     const confirmCommitMessageAnswers = await inquirer.prompt(confirmCommitMessage);
 
-    return confirmCommitMessageAnswers.confirmCommitMessage;
+    return [message, confirmCommitMessageAnswers.confirmCommitMessage];
 }
 
 async function diffSizePrompt(diff: string, files: string[]) {
@@ -71,6 +84,13 @@ async function diffSizePrompt(diff: string, files: string[]) {
     return await getDiffForFiles(filesSelected.files);
 }
 
-export async function commitAllPrompts() {
-    await commitAll(scopeConfirmationPrompt, commitConfirmationPrompt, diffSizePrompt);
+export async function commitAllPrompts(...args: any[]) {
+    const [optionalArgs] = args;
+
+    await commitAll(
+        scopeConfirmationPrompt,
+        commitConfirmationPrompt,
+        diffSizePrompt,
+        optionalArgs
+    );
 }
