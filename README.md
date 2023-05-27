@@ -100,16 +100,31 @@ cb commit-all
 
 this will do a git add for every detected scope, and run the same prompts as cb commit, but for every available scope.
 
+### Command-Line Arguments
+
+CodeBuddy also supports the following command-line arguments:
+
+-   `-r, --reason <reason>`: Specifies the reason for the changes, providing additional context for the commit message.
+-   `-t, --type <type>`: Specifies the commit type, grounding the AI-generated message in the given type for better commit messages.
+-   `-s, --scope <scope>`: Specifies the a specific scope, can help if order matters.
+
+Some arguments coming soon:
+
+-   `-b, --breaking`: Specifies that the changes are breaking changes.
+-   `-i, --issue <issue>`: Specifies the issue key for the commit message (Note you can pull this from a commit message with config).
+
+Please note that command-line arguments take precedence over the configuration file settings.
+
 ## Version
 
-The current version of CodeBuddy is 0.2.0.
+The current version of CodeBuddy is 0.4.0.
 
 ## Contributing
 
 We welcome contributions! If you'd like to contribute, please follow these steps:
 
 1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
+2. Create a new branch for your feature or bug fix.
 3. Commit your changes and push them to your fork.
 4. Create a pull request and describe the changes you made.
 
