@@ -100,12 +100,23 @@ import chalk from "chalk";
 /**
  * Group files by scope for a monorepo structure.
  * @param {string} file - The file to get the scope from.
+ * @param {string[]} directories - An array of directories for the regex.
  * @returns {string | undefined} The scope of the file.
  */
-function getScopeMonorepo(file: string): string | undefined {
-    const scopeMatch = file.match(/^(?:apps\/([^\/]+)|packages\/([^\/]+)|functions\/([^\/]+))/);
+function getScopeMonorepo(
+    file: string,
+    directories = ["apps", "packages", "functions"]
+): string | undefined {
+    const regexStr = directories.map((directory) => `(?:${directory}\/([^\/]+))`).join("|");
+    const scopeMatch = file.match(new RegExp(`^${regexStr}`));
+
     if (scopeMatch) {
-        return scopeMatch[1] || scopeMatch[2] || scopeMatch[3];
+        // Matched groups start from index 1. As such, we need to return the first non-undefined group.
+        for (let i = 1; i < scopeMatch.length; i++) {
+            if (scopeMatch[i]) {
+                return scopeMatch[i];
+            }
+        }
     }
 }
 
@@ -238,7 +249,7 @@ export async function commitAll(
             if (filesToRemove.length > 0)
                 await git.rm(currentFiles.filter((file) => !allExceptDeleted.includes(file)));
 
-            let diff = await getDiffForFiles(groups[scope]);
+            let diff = await getDiffForFiles(filesToAdd);
             diff = await reduceDiff(diff, groups[scope]);
             await commit(diff, scope, confirmCommit);
         }
