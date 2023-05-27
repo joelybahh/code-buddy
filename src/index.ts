@@ -17,6 +17,7 @@ program
     .option("-s, --scope <scope>", "Specify the scope.")
     .option("-t, --type <type>", "Specify the type.")
     .option("-i, --issue <issue>", "Specify the issue key.")
+    .option("-r, --reason <reason>", "Specify the reason for the change.")
     .action(commitAllPrompts);
 
 program.parse(process.argv);
