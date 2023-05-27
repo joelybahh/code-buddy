@@ -96,4 +96,5 @@ export type OptionalArgs = {
     scope?: string;
     issue?: string;
     type?: TCommitType;
+    reason?: string;
 };
