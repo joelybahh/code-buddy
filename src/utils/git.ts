@@ -194,11 +194,11 @@ export async function commit(
     let confirmed = false;
     let commitMessage = "";
 
-    const { breaking, issue, message, type } = args;
+    const { breaking, issue, message, type, reason } = args;
 
     while (!confirmed) {
         console.log(chalk.yellow("✨ Generating commit message..."));
-        commitMessage = await determineCommitMessage(diff, scope, type);
+        commitMessage = await determineCommitMessage(diff, scope, type, reason);
         if (!commitMessage) {
             console.error("❌ Unable to generate commit message.");
             return;

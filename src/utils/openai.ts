@@ -81,9 +81,14 @@ export async function summariseDescription(description: string) {
  * The type is optional, but if provided, will help GPT generate a more accurate commit message by grounding the commit message
  * in the type. If none is provided, GPT will generate a commit message and try to determine the type of the commit message.
  */
-export async function determineCommitMessage(diff: string, scope: string, type?: string) {
+export async function determineCommitMessage(
+    diff: string,
+    scope: string,
+    type?: string,
+    reason?: string
+) {
     const [openai, config] = await getOpenAI();
-    const prompt = getCommitMessagePrompt(diff, scope, type);
+    const prompt = getCommitMessagePrompt(diff, scope, type, reason);
 
     try {
         const response = await openai.createChatCompletion({
@@ -124,7 +129,7 @@ const commitTypeDescriptions = {
     revert: "You're reverting a previous commit.",
 };
 
-const getCommitMessagePrompt = (diff: string, scope: string, type?: string) => {
+const getCommitMessagePrompt = (diff: string, scope: string, type?: string, reason?: string) => {
     let commitTypes = `Commit Types:
 - docs: When the changes affect files of type \`.md\` or pure code comments
 - refactor: A code change that neither fixes a bug nor adds a feature
@@ -143,29 +148,37 @@ const getCommitMessagePrompt = (diff: string, scope: string, type?: string) => {
 
     if (type) {
         commitTypes = "";
-        typeSpecificGuidelines = `The commit is of type "${type}", so the summary should clearly indicate what changes were made under this type. ${commitTypeDescriptions[type]} The description should provide a brief explanation of the changes, highlighting the main points and reasoning behind the changes made.`;
+        typeSpecificGuidelines = `The commit is of type "${type}", so the summary should clearly indicate what changes were made under this type. ${commitTypeDescriptions[type]}. The description should provide a brief explanation of the changes, highlighting the main points and reasoning behind the changes made.`;
     }
 
-    return `You are a developer who needs to write a commit message for the following changes that provide enough a glance context to developers but strive yourself on being comprehensive but concise.
+    let reasonDescription = "";
+    if (reason) {
+        reasonDescription = `The changes were made because ${reason}. `;
+    }
+
+    return `You are a developer who needs to write a commit message for the following changes that provide enough context to developers, aiming to be comprehensive yet concise.
 
 Below is a diff of your changes:
 \`${diff}\`
 
-A commit message follows the below structure:
+A commit message follows the structure:
 \`{commit_summary}
 
-{commit_description}\`
+- {commit_description}\`
 
 The rules for the commit message are as follows:
 - A commit summary should be concise. 
 - A commit description should also be concise.
 - ${
         type
-            ? `In this case, the commit summary needs to start with "${type}"`
-            : "The commit summary needs to start with the appropriate type of commit (feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert)"
-    } ${
-        scope !== "." ? `with the following scope (${scope}) ` : "with no scope "
-    }followed by a colon (:). The scope is optional.
+            ? `In this case, the commit summary needs to start with "${type}". `
+            : "The commit summary needs to start with the appropriate type of commit (feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert). "
+    }${
+        scope !== "."
+            ? `It should also include the following scope (${scope}). `
+            : "It can also be without any scope. "
+    }This should be followed by a colon (:). The scope is optional.
+${reasonDescription}
 ${typeSpecificGuidelines}
 ${commitTypes}`;
 };
