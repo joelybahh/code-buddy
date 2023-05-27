@@ -1,9 +1,17 @@
 import inquirer, { QuestionCollection } from "inquirer";
 import chalk from "chalk";
 
-import { getDiffForFiles, getIssueKeyFromBranchName, commitAll } from "../utils/git.js";
+import { getDiffForFiles, commitAll } from "../utils/git.js";
 import { loadConfig } from "../utils/openai.js";
-import { applyEmoji, applyIssueKey, applySentenceCase } from "../utils/config.js";
+import {
+    applyConfigTransform,
+    applyConfigTransformAsync,
+    applyEmoji,
+    applyIssueKey,
+    applyScopeTrim,
+    applySentenceCase,
+    isTruthy,
+} from "../utils/config.js";
 
 async function scopeConfirmationPrompt(scope: string) {
     const confirmScope = [
@@ -22,20 +30,22 @@ async function scopeConfirmationPrompt(scope: string) {
 async function commitConfirmationPrompt(message: string): Promise<[string, boolean]> {
     const config = await loadConfig();
 
-    if (config.commit.issue) {
-        message = await applyIssueKey(message, config.commit.issue);
-    }
+    // Extract config values
+    const issue = config?.commit?.issue;
+    const sentenceCase = config?.commit?.format?.sentenceCase;
+    const scopeTrim = config?.commit?.scopeTrim;
+    const emoji = config?.commit?.format?.useEmoji;
 
-    if (!config.commit.format.sentenceCase) {
-        message = applySentenceCase(message);
-    }
-
-    if (config.commit.format.useEmoji) {
-        message = applyEmoji(message);
-    }
+    // Apply config transforms
+    // prettier-ignore
+    message = await applyConfigTransformAsync(message, isTruthy(issue), applyIssueKey, config.commit);
+    message = applyConfigTransform(message, isTruthy(sentenceCase), applySentenceCase);
+    message = applyConfigTransform(message, isTruthy(scopeTrim), applyScopeTrim, scopeTrim);
+    message = applyConfigTransform(message, isTruthy(emoji), applyEmoji, emoji);
 
     console.log(chalk.green("✅ Successfully Generated \n\n") + chalk.bold.yellow(message) + "\n");
 
+    // Ask user if they want to use the generated commit message
     const confirmCommitMessage = [
         {
             type: "confirm",
@@ -44,7 +54,6 @@ async function commitConfirmationPrompt(message: string): Promise<[string, boole
             default: true,
         },
     ];
-
     const confirmCommitMessageAnswers = await inquirer.prompt(confirmCommitMessage);
 
     return [message, confirmCommitMessageAnswers.confirmCommitMessage];
