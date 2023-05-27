@@ -12,6 +12,8 @@ All notable changes to the CodeBuddy project will be documented in this file.
 -   Added support for emoji in commit messages, enhancing their visual appeal.
 -   Added an optional `reason` argument to the `determineCommitMessage` function in `src/utils/openai.ts` to provide additional context for the generated commit messages.
     -   This feature allows AI-generated commits to be coupled with a reason, providing business context where needed.
+-   Added an optional `type` argument to the `determineCommitMessage` function in `src/utils/openai.ts` to provide a commit type for the generated commit messages.
+    -   This feature allows AI-generated commits to be grounded in a specific type, improving the quality of the generated commit messages.
 
 ### Changed
 
