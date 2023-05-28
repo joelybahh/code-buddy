@@ -14,16 +14,16 @@ CodeBuddy is an AI-powered developer assistant for code reviews, automating comm
 
 ## Installation
 
-You can install CodeBuddy globally using npm:
+CodeBuddy can be installed globally using npm, Or you can view it on the npm registry [here](https://www.npmjs.com/package/@joelybahh/code-buddy).
 
 ```
-npm install -g .
+npm install -g @joelybahh/code-buddy
 ```
 
 Or using yarn:
 
 ```
-yarn global add .
+yarn global add @joelybahh/code-buddy
 ```
 
 ## Configuration
