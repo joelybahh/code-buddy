@@ -2,6 +2,13 @@
 
 All notable changes to the CodeBuddy project will be documented in this file.
 
+## [0.4.1] - 28/05/2023
+
+### Changed
+
+-   Updated README to include NPM installation instructions.
+-   Updated README to include various badges.
+
 ## [0.4.0] - 27/05/2023
 
 ### Added

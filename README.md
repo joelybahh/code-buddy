@@ -114,10 +114,6 @@ Some arguments coming soon:
 
 Please note that command-line arguments take precedence over the configuration file settings.
 
-## Version
-
-The current version of CodeBuddy is 0.4.0.
-
 ## Contributing
 
 We welcome contributions! If you'd like to contribute, please follow these steps:
