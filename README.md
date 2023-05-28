@@ -2,6 +2,11 @@
 
 CodeBuddy is an AI-powered developer assistant for code reviews, automating commits, and more. This CLI tool is designed to streamline your development process and make your life easier.
 
+[![npm version](https://badge.fury.io/js/%40joelybahh%2Fcode-buddy.svg)](https://www.npmjs.com/package/@joelybahh/code-buddy)
+[![Build Status](https://travis-ci.com/joelybahh/code-buddy.svg?branch=main)](https://travis-ci.com/joelybahh/code-buddy)
+[![Coverage Status](https://coveralls.io/repos/github/joelybahh/code-buddy/badge.svg?branch=main)](https://coveralls.io/github/joelybahh/code-buddy?branch=main)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+
 ## Features
 
 -   Automatically generate commit messages based on the diff
