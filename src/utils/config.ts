@@ -66,9 +66,8 @@ export async function applyIssueKey(
             },
         ] as QuestionCollection;
 
-        // add the issue key to the commit message right before the first line break, if none, add it to the end of the commit message
         const issueKeyAnswers = await inquirer.prompt(confirmHasIssue);
-        issueKey = issueKeyAnswers.issueKey;
+        issueKey = issueKeyAnswers.issueKey || fallbackKey;
     }
 
     const firstLineBreak = message.indexOf("\n");
