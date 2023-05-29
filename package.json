@@ -1,6 +1,6 @@
 {
     "name": "@joelybahh/code-buddy",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "description": "An AI-powered developer assistant for code reviews, automating commits, and more.",
     "exports": "./dist/index.js",
     "types": "dist/index.d.ts",

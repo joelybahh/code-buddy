@@ -2,6 +2,12 @@
 
 All notable changes to the CodeBuddy project will be documented in this file.
 
+## [0.4.2] - 29/05/2023
+
+### Fixed
+
+-   Fixed a bug where the issue key was coming through as [undefined] instead of using the fallback key.
+
 ## [0.4.1] - 28/05/2023
 
 ### Changed
@@ -71,3 +77,4 @@ All notable changes to the CodeBuddy project will be documented in this file.
 
 -   Initial release with basic functionality
 -   Automatically generate commit messages based on the diff
+    $$
