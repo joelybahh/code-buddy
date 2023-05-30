@@ -72,7 +72,7 @@ export async function getIssueKeyFromBranchName(
  */
 export async function getDiffForFiles(files: string[]): Promise<string> {
     try {
-        return git.diff(["--cached", ...files]);
+        return git.diff(["--cached", "--", ...files]);
     } catch (error) {
         console.error("Error getting diff for files:", error);
         return "";
