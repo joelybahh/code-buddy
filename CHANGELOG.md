@@ -2,6 +2,12 @@
 
 All notable changes to the CodeBuddy project will be documented in this file.
 
+## [0.4.3] - 30/05/2023
+
+### Fixed
+
+-   Fixed a bug where the the diff check would fail if there were deleted files in the diff, due to a missing `--` in the `git.diff` command.
+
 ## [0.4.2] - 29/05/2023
 
 ### Fixed
