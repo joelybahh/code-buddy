@@ -42,7 +42,7 @@
         "chalk": "^5.2.0",
         "commander": "^10.0.1",
         "inquirer": "^9.2.1",
-        "openai": "^3.2.1",
+        "openai": "^3.3.0",
         "simple-git": "^3.18.0"
     },
     "devDependencies": {
