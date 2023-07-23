@@ -2,6 +2,16 @@
 
 All notable changes to the CodeBuddy project will be documented in this file.
 
+## [0.5.0] - 23/07/2023
+
+### Added
+
+-   OpenAI Function Calling to generate a consistently formatted commit message for the user.
+
+### Changed
+
+-   Updated the maxTokens to 900 up from 100 to allow for more complete commit message generation.
+
 ## [0.4.3] - 30/05/2023
 
 ### Fixed
