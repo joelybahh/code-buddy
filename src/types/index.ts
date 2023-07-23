@@ -104,3 +104,17 @@ export type OptionalArgs = {
     type?: TCommitType;
     reason?: string;
 };
+
+export class ConfigLoadError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "ConfigLoadError";
+    }
+}
+
+export class CommitMessageError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "CommitMessageError";
+    }
+}
