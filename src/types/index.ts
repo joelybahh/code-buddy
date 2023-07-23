@@ -6,6 +6,12 @@ export type CodeBuddyConfig = {
         apiKey: string;
         organization: string;
         model: "gpt-4" | "gpt-3.5-turbo";
+        maxTokens?: number;
+        temperature?: number;
+        topP?: number;
+        frequencyPenalty?: number;
+        presencePenalty?: number;
+        stop?: string[];
     };
     commit?: {
         scopeTrim: string;
