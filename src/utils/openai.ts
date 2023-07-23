@@ -1,15 +1,25 @@
-import { ChatCompletionRequestMessageRoleEnum, Configuration, OpenAIApi } from "openai";
+import {
+    ChatCompletionRequestMessageRoleEnum,
+    ChatCompletionResponseMessage,
+    Configuration,
+    OpenAIApi,
+} from "openai";
 
 import path from "path";
-import { CodeBuddyConfig } from "../types/index.js";
+import { CodeBuddyConfig, CommitMessageError, ConfigLoadError } from "../types/index.js";
+
+const DEFAULT_MAX_TOKENS = 200;
+const DEFAULT_TEMPERATURE = 0.3;
+const DEFAULT_TOP_P = 1;
+const DEFAULT_FREQUENCY_PENALTY = 0.5;
+const DEFAULT_PRESENCE_PENALTY = 0.5;
 
 export async function loadConfig(): Promise<CodeBuddyConfig> {
     try {
         const config = await import(path.resolve(process.cwd(), "cb.config.js"));
         return config.default;
     } catch (error) {
-        console.error("Error loading configuration file:", error.message);
-        process.exit(1);
+        throw new ConfigLoadError("Error loading configuration file: " + error.message);
     }
 }
 
@@ -26,11 +36,10 @@ async function getOpenAI(): Promise<[OpenAIApi, CodeBuddyConfig]> {
     ];
 }
 
-const DEFAULT_MAX_TOKENS = 200;
-const DEFAULT_TEMPERATURE = 0.3;
-const DEFAULT_TOP_P = 1;
-const DEFAULT_FREQUENCY_PENALTY = 0.5;
-const DEFAULT_PRESENCE_PENALTY = 0.5;
+const extractFunctionArgs = (response: ChatCompletionResponseMessage) => {
+    const args = JSON.parse(response.function_call.arguments);
+    return args;
+};
 
 /**
  * This function generates a commit message for a given diff, scope and type.
@@ -112,20 +121,26 @@ export async function determineCommitMessage(
             frequency_penalty: config.chatGPT.frequencyPenalty || DEFAULT_FREQUENCY_PENALTY,
             presence_penalty: config.chatGPT.presencePenalty || DEFAULT_PRESENCE_PENALTY,
         });
-        console.log(response.data.choices[0]);
-        if (response.data.choices && response.data.choices.length > 0) {
-            const args = JSON.parse(response.data.choices[0].message.function_call.arguments);
 
-            return createMessage({
-                scope,
-                ...args,
-            });
+        if (!response.data.choices || response.data.choices.length === 0) {
+            throw new CommitMessageError("GPT returned an empty response.");
         }
-    } catch (error) {
-        console.error("Error generating commit message:", error.response.data);
-    }
 
-    return ""; // Return an empty string if GPT is unable to generate a commit message
+        const args = extractFunctionArgs(response.data.choices[0].message);
+
+        return createMessage({
+            scope,
+            ...args,
+        });
+    } catch (error) {
+        if (error instanceof CommitMessageError) {
+            console.error("Commit message error:", error.message);
+        } else {
+            console.error("Error generating commit message:", error.message);
+        }
+        // Now, throw the error up the call stack so that it can be handled appropriately by the calling code
+        throw error;
+    }
 }
 
 const createMessage = ({
