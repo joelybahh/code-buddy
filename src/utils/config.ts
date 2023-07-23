@@ -45,6 +45,7 @@ export async function applyIssueKey(
     issueConfig: CodeBuddyConfig["commit"]["issue"]
 ) {
     const { detectKey, fallbackKey, keyRegex } = issueConfig;
+
     let issueKey = "";
     if (detectKey) {
         const key = await getIssueKeyFromBranchName(keyRegex);
