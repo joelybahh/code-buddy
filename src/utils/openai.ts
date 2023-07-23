@@ -35,7 +35,7 @@ export async function summariseDescription(description: string) {
             .replace(/\.$/, "")
             .replace(/^\w/, (c) => c.toLowerCase());
 
-    const prompt = `Create a summary of the following description in 100 words or less. It cannot start with a capital letter and should not end in a fullstop. Any additional details that seem useful, add to the text after a new line separator. Just reply with the summarised description only: "${description}";`;
+    const prompt = `${description}`;
     try {
         const response = await openai.createChatCompletion({
             messages: [
@@ -49,8 +49,45 @@ export async function summariseDescription(description: string) {
                     role: ChatCompletionRequestMessageRoleEnum.User,
                 },
             ],
+            functions: [
+                {
+                    name: "structure-commit-message",
+                    description:
+                        "A function to structure a commit message based on changes and user context.",
+                    parameters: {
+                        summary: {
+                            type: "string",
+                            description: "A 100 word summary of the changes to be committed.",
+                        },
+                        description: {
+                            type: "string",
+                            description:
+                                "A more detailed description of the changes to be committed.",
+                        },
+                        type: {
+                            type: "string",
+                            enum: [
+                                "feat",
+                                "fix",
+                                "docs",
+                                "style",
+                                "refactor",
+                                "test",
+                                "chore",
+                                "perf",
+                                "ci",
+                                "build",
+                                "revert",
+                            ],
+                        },
+                    },
+                },
+            ],
+            function_call: {
+                name: "structure-commit-message",
+            },
             model: config.chatGPT.model,
-            max_tokens: 100,
+            max_tokens: 200,
             temperature: 0.3,
             top_p: 1,
             frequency_penalty: 0.5,
@@ -98,15 +135,63 @@ export async function determineCommitMessage(
                     role: ChatCompletionRequestMessageRoleEnum.User,
                 },
             ],
+            functions: [
+                {
+                    name: "structure-commit-message",
+                    description:
+                        "A function to structure a commit message based on changes and user context.",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            summary: {
+                                type: "string",
+                                description:
+                                    "A concise summary of the changes to be committed, no longer than 100 words",
+                            },
+                            description: {
+                                type: "string",
+                                description:
+                                    "A more detailed description of the changes to be committed as dot points, no longer than 200 words",
+                            },
+                            type: {
+                                type: "string",
+                                enum: [
+                                    "feat",
+                                    "fix",
+                                    "docs",
+                                    "style",
+                                    "refactor",
+                                    "test",
+                                    "chore",
+                                    "perf",
+                                    "ci",
+                                    "build",
+                                    "revert",
+                                ],
+                            },
+                        },
+                        required: ["summary", "description"],
+                    },
+                },
+            ],
+            function_call: {
+                name: "structure-commit-message",
+            },
             model: config.chatGPT.model,
-            max_tokens: 100,
+            max_tokens: 900,
             temperature: 0.3,
             top_p: 1,
             frequency_penalty: 0.5,
             presence_penalty: 0.5,
         });
+        console.log(response.data.choices[0]);
         if (response.data.choices && response.data.choices.length > 0) {
-            return response.data.choices[0].message.content.trim();
+            const args = JSON.parse(response.data.choices[0].message.function_call.arguments);
+
+            return createMessage({
+                scope,
+                ...args,
+            });
         }
     } catch (error) {
         console.error("Error generating commit message:", error.response.data);
@@ -114,6 +199,21 @@ export async function determineCommitMessage(
 
     return ""; // Return an empty string if GPT is unable to generate a commit message
 }
+
+const createMessage = ({
+    scope,
+    summary,
+    description,
+    type,
+}: {
+    scope: string;
+    summary: string;
+    description: string;
+    type: string;
+}) => {
+    if (scope === ".") return `${type}: ${summary} \n\n${description}`;
+    return `${type}(${scope}): ${summary} \n\n${description}`;
+};
 
 const commitTypeDescriptions = {
     docs: "You're updating documentation or code comments.",
@@ -156,28 +256,16 @@ const getCommitMessagePrompt = (diff: string, scope: string, type?: string, reas
         reasonDescription = `The changes were made because ${reason}. `;
     }
 
-    return `You are a developer who needs to write a commit message for the following changes that provide enough context to developers, aiming to be comprehensive yet concise.
-
-Below is a diff of your changes:
+    return `Here are my changes:
 \`${diff}\`
 
-A commit message follows the structure:
-\`{commit_summary}
+${type ? ` - The type of commit is "${type}". ` : " - I need to determine the type of commit. "}
+${
+    scope !== "."
+        ? ` - The scope of the changes is "${scope}". `
+        : " - This commit affects more than one scope. "
+}
 
-- {commit_description}\`
-
-The rules for the commit message are as follows:
-- A commit summary should be concise. 
-- A commit description should also be concise.
-- ${
-        type
-            ? `In this case, the commit summary needs to start with "${type}". `
-            : "The commit summary needs to start with the appropriate type of commit (feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert). "
-    }${
-        scope !== "."
-            ? `It should also include the following scope (${scope}). `
-            : "It can also be without any scope. "
-    }This should be followed by a colon (:). The scope is optional.
 ${reasonDescription}
 ${typeSpecificGuidelines}
 ${commitTypes}`;
