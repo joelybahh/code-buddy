@@ -6,6 +6,12 @@ export type CodeBuddyConfig = {
         apiKey: string;
         organization: string;
         model: "gpt-4" | "gpt-3.5-turbo";
+        maxTokens?: number;
+        temperature?: number;
+        topP?: number;
+        frequencyPenalty?: number;
+        presencePenalty?: number;
+        stop?: string[];
     };
     commit?: {
         scopeTrim: string;
@@ -98,3 +104,17 @@ export type OptionalArgs = {
     type?: TCommitType;
     reason?: string;
 };
+
+export class ConfigLoadError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "ConfigLoadError";
+    }
+}
+
+export class CommitMessageError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "CommitMessageError";
+    }
+}

@@ -1,8 +1,6 @@
-import inquirer, { QuestionCollection } from "inquirer";
 import chalk from "chalk";
+import inquirer, { QuestionCollection } from "inquirer";
 
-import { getDiffForFiles, commitAll } from "../utils/git.js";
-import { loadConfig } from "../utils/openai.js";
 import {
     applyConfigTransform,
     applyConfigTransformAsync,
@@ -12,6 +10,8 @@ import {
     applySentenceCase,
     isTruthy,
 } from "../utils/config.js";
+import { commitAll, getDiffForFiles } from "../utils/git.js";
+import { loadConfig } from "../utils/openai.js";
 
 async function scopeConfirmationPrompt(scope: string) {
     const confirmScope = [
@@ -38,7 +38,7 @@ async function commitConfirmationPrompt(message: string): Promise<[string, boole
 
     // Apply config transforms
     // prettier-ignore
-    message = await applyConfigTransformAsync(message, isTruthy(issue), applyIssueKey, config.commit);
+    message = await applyConfigTransformAsync(message, isTruthy(issue), applyIssueKey, config.commit?.issue);
     message = applyConfigTransform(message, isTruthy(sentenceCase), applySentenceCase);
     message = applyConfigTransform(message, isTruthy(scopeTrim), applyScopeTrim, scopeTrim);
     message = applyConfigTransform(message, isTruthy(emoji), applyEmoji, emoji);

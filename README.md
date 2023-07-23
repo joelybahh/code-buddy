@@ -36,6 +36,12 @@ CodeBuddy can be configured using a `cb.config.js` file in the root of your proj
         apiKey: string;
         organization: string;
         model: "gpt-4" | "gpt-3.5-turbo";
+        maxTokens?: number;
+        temperature?: number;
+        topP?: number;
+        presencePenalty?: number;
+        frequencyPenalty?: number;
+        stop?: string[];
     };
     commit?: {
         scopeTrim: string;
@@ -66,6 +72,12 @@ This object contains properties related to ChatGPT authentication and requests.
 -   `apiKey` (string): Your OpenAI API key for authentication.
 -   `organization` (string): The organization ID associated with your OpenAI account.
 -   `model` (string): The GPT model to use, either `"gpt-4"` or `"gpt-3.5-turbo"`.
+-   `maxTokens` (number, optional): The maximum number of tokens to generate. Defaults to `200`.
+-   `temperature` (number, optional): The temperature to use for token generation. Defaults to `0.3`.
+-   `topP` (number, optional): The topP value to use for token generation. Defaults to `1`.
+-   `presencePenalty` (number, optional): The presence penalty to use for token generation. Defaults to `0.5`.
+-   `frequencyPenalty` (number, optional): The frequency penalty to use for token generation. Defaults to `0.5`.
+-   `stop` (string[], optional): An array of strings to use as stop sequences for token generation.
 
 ### commit (optional)
 
