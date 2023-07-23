@@ -2,6 +2,25 @@
 
 All notable changes to the CodeBuddy project will be documented in this file.
 
+## [0.6.0] - 23/07/2023
+
+### Added
+
+-   Added `maxTokens` as an option for the config file [INT-15].
+-   Added `temperature` as an option for the config file [INT-15].
+-   Added `topP` as an option for the config file [INT-15].
+-   Added `frequencyPenalty` as an option for the config file [INT-15].
+-   Added `presencePenalty` as an option for the config file [INT-15].
+-   Added `stop` as an option for the config file [INT-15].
+
+### Changed
+
+-   Improved the error handling for commit message generation [INT-14].
+
+### Fixed
+
+-   Fixed a bug where the automatic issue key detection was not working [INT-16].
+
 ## [0.5.0] - 23/07/2023
 
 ### Added
