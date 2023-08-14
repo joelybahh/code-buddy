@@ -118,3 +118,32 @@ export class CommitMessageError extends Error {
         this.name = "CommitMessageError";
     }
 }
+
+export type PackageJson = {
+    name?: string;
+    version?: string;
+    description?: string;
+    keywords?: string[];
+    homepage?: string;
+    bugs?: string | { url?: string; email?: string };
+    license?: string;
+    author?: string | { name: string; email?: string; url?: string };
+    contributors?: string[] | { name: string; email?: string; url?: string }[];
+    files?: string[];
+    main?: string;
+    browser?: string;
+    bin?: string | { [key: string]: string };
+    directories?: {
+        lib?: string;
+        bin?: string;
+    };
+    repository?: string | { type: string; url: string };
+    scripts?: { [key: string]: string };
+    config?: { [key: string]: string };
+    dependencies?: { [key: string]: string };
+    devDependencies?: { [key: string]: string };
+    peerDependencies?: { [key: string]: string };
+    private: boolean;
+    publishConfig?: { [key: string]: string };
+    workspaces?: string[];
+};
