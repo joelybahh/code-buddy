@@ -10,8 +10,10 @@ import {
     applySentenceCase,
     isTruthy,
 } from "../utils/config.js";
+import { loadConfig } from "../utils/files.js";
 import { commitAll, getDiffForFiles } from "../utils/git.js";
-import { loadConfig } from "../utils/openai.js";
+
+import { loadPackageJson } from "../utils/files.js";
 
 async function scopeConfirmationPrompt(scope: string) {
     const confirmScope = [
@@ -93,4 +95,63 @@ export async function commitAllPrompts(...args: any[]) {
         diffSizePrompt,
         optionalArgs
     );
+}
+
+async function majorMinorRevisionChangePrompt() {
+    const majorMinorRevision = [
+        {
+            type: "list",
+            name: "majorMinorRevision",
+            message: "What type of change did you make?",
+            choices: [
+                {
+                    name: "Major - A backwards incompatible change or a feature that will change the way the user interacts with the application.",
+                    value: "major",
+                },
+                {
+                    name: "Minor - A backwards compatible change or a feature that will not change the way the user interacts with the application.",
+                    value: "minor",
+                },
+                {
+                    name: "Revision - A bug fix or a change that does not affect the way the user interacts with the application.",
+                    value: "revision",
+                },
+            ],
+        },
+    ];
+
+    const majorMinorRevisionAnswers = await inquirer.prompt(majorMinorRevision);
+    return majorMinorRevisionAnswers.majorMinorRevision;
+}
+
+const applyIncrement = (version: string[], increment: string) => {
+    switch (increment) {
+        case "major":
+            version[0] = (parseInt(version[0]) + 1).toString();
+            version[1] = "0";
+            version[2] = "0";
+            break;
+        case "minor":
+            version[1] = (parseInt(version[1]) + 1).toString();
+            version[2] = "0";
+            break;
+        case "revision":
+            version[2] = (parseInt(version[2]) + 1).toString();
+            break;
+    }
+
+    return version.join(".");
+};
+
+export async function smartVersionPrompts(...args: any[]) {
+    const packageJson = await loadPackageJson();
+    console.log(`${chalk.bold.yellow(`${packageJson.name} v${packageJson.version}`)}`);
+
+    const version = packageJson.version.split(".");
+
+    const increment = await majorMinorRevisionChangePrompt();
+
+    const newVersion = applyIncrement(version, increment);
+
+    console.log(`\n${chalk.bold.yellow(`New Version: v${newVersion}`)}`);
 }
