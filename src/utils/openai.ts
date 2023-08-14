@@ -5,23 +5,14 @@ import {
     OpenAIApi,
 } from "openai";
 
-import path from "path";
-import { CodeBuddyConfig, CommitMessageError, ConfigLoadError } from "../types/index.js";
+import { CodeBuddyConfig, CommitMessageError } from "../types/index.js";
+import { loadConfig } from "./files.js";
 
 const DEFAULT_MAX_TOKENS = 200;
 const DEFAULT_TEMPERATURE = 0.3;
 const DEFAULT_TOP_P = 1;
 const DEFAULT_FREQUENCY_PENALTY = 0.5;
 const DEFAULT_PRESENCE_PENALTY = 0.5;
-
-export async function loadConfig(): Promise<CodeBuddyConfig> {
-    try {
-        const config = await import(path.resolve(process.cwd(), "cb.config.js"));
-        return config.default;
-    } catch (error) {
-        throw new ConfigLoadError("Error loading configuration file: " + error.message);
-    }
-}
 
 async function getOpenAI(): Promise<[OpenAIApi, CodeBuddyConfig]> {
     const config = await loadConfig();

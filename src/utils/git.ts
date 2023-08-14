@@ -1,4 +1,7 @@
+import chalk from "chalk";
 import { CommitResult, FileStatusResult, StatusResult, simpleGit } from "simple-git";
+import { OptionalArgs, ScopeMode } from "../types/index.js";
+import { loadConfig } from "./files.js";
 import { determineCommitMessage } from "./openai.js";
 
 const git = simpleGit();
@@ -92,10 +95,6 @@ export async function commitChanges(message: string): Promise<CommitResult | und
         return undefined;
     }
 }
-
-import chalk from "chalk";
-import { OptionalArgs, ScopeMode } from "../types/index.js";
-import { loadConfig } from "../utils/openai.js";
 
 /**
  * Group files by scope for a monorepo structure.
