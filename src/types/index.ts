@@ -35,6 +35,7 @@ export type CodeBuddyConfig = {
     };
     changelog?: {
         destination?: string;
+        appName?: string;
     };
 };
 
