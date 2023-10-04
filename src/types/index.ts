@@ -33,6 +33,9 @@ export type CodeBuddyConfig = {
         maxSize?: number;
         exclude?: string[];
     };
+    changelog?: {
+        destination?: string;
+    };
 };
 
 /**
