@@ -10,7 +10,7 @@ import {
     applySentenceCase,
     isTruthy,
 } from "../utils/config.js";
-import { commitAll, getDiffForFiles } from "../utils/git.js";
+import { commitAll, getCommitLogs, getDiffForFiles } from "../utils/git.js";
 import { loadConfig } from "../utils/openai.js";
 
 async function scopeConfirmationPrompt(scope: string) {
@@ -93,4 +93,17 @@ export async function commitAllPrompts(...args: any[]) {
         diffSizePrompt,
         optionalArgs
     );
+}
+
+export async function generateChangelog(...args: any[]) {
+    const [optionalArgs] = args;
+
+    const config = await loadConfig();
+    const commits = await getCommitLogs(
+        optionalArgs.destination || config.changelog?.destination || "main"
+    );
+
+    console.log(commits);
+
+    //const message = await getChangelog(commits);
 }
