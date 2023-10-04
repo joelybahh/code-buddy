@@ -2,10 +2,11 @@
 
 import { Command } from "commander";
 
-import { commitAllPrompts } from "./prompts/index.js";
+import { commitAllPrompts, generateChangelog } from "./prompts/index.js";
 
 const program = new Command();
 
+// Init commit-all command
 program
     .version("0.2.0")
     .command("commit-all")
@@ -18,5 +19,12 @@ program
     .option("-i, --issue <issue>", "Specify the issue key.")
     .option("-r, --reason <reason>", "Specify the reason for the change.")
     .action(commitAllPrompts);
+
+// Init changelog and version commands
+program
+    .command("changelog")
+    .description("Generates a changelog for the feature branch against destination branch.")
+    .option("-d, --destination <destination>", "Specify the destination branch. (defaults to main)")
+    .action(generateChangelog);
 
 program.parse(process.argv);
