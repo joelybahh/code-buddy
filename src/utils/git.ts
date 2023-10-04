@@ -258,3 +258,14 @@ export async function commitAll(
         }
     }
 }
+
+export async function getCommitLogs(destination: string) {
+    const currentBranch = (await git.branchLocal()).current;
+    const result = await git.raw([
+        "log",
+        "--pretty=format:%s%n%n%b",
+        "--abbrev-commit",
+        `${destination}..${currentBranch}`,
+    ]);
+    return result;
+}

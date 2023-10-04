@@ -213,3 +213,70 @@ ${reasonDescription}
 ${typeSpecificGuidelines}
 ${commitTypes}`;
 };
+
+export const getChangelog = async (commits: string) => {
+    const [openai, config] = await getOpenAI();
+
+    const systemPrompt =
+        'Generate a changelog from the provided commit messages, organizing them under the scope with suggested version increments (+x.y.z). Include explanations for the suggested increments and organize the commits into "Major", "Minor", and "Revisions" categories. Omit any \'chore\' commits. If a commit contains \'BREAKING\' (placed after the commit message and before the issue key), suggest a major version increment. Include emojis if present in the commit messages.\n\n' +
+        "Given the following sample commit messages:\n\n" +
+        [
+            "feat(ui): 🎉 added usePrevious hook to the exports in inspace-ui [IN-889]\n\n- A new hook 'usePrevious' has been added to the exports in the hooks index file of inspace-ui package.",
+            "refactor(search): 🧹 changed 'sector' to 'sectors' in filter constants [IN-889]\n\n- Modified the type of sectors from 'sector' to 'sectors' in the defaultFilterSchema and defaultFilterSchemaWorkspaces objects within the inspace-search package.",
+            "refactor(api): 🧹 updated API endpoints BREAKING [IN-900]\n\n- The API endpoints were updated to improve performance and security. This change is not backward compatible.",
+        ].join("\n\n") +
+        "The expected output would be:\n\n" +
+        `# Changelog
+
+        ## ui +0.1.0
+        
+        The version increment is suggested due to the addition of new features that do not break backward compatibility and enhance the functionality of the \`ui\` scope.
+        
+        ### Minor
+        - 🎉 Added \`usePrevious\` hook to the exports in inspace-ui ([IN-889](link-to-issue-IN-889))
+          - A new hook 'usePrevious' has been added to the exports in the hooks index file of inspace-ui package.
+        
+        ## search +0.0.1
+        
+        The version increment is suggested because the refactor enhances code quality and readability without adding new features or fixing bugs.
+        
+        ### Revisions
+        - 🧹 Changed 'sector' to 'sectors' in filter constants ([IN-889](link-to-issue-IN-889))
+          - Modified the type of sectors from 'sector' to 'sectors' in the defaultFilterSchema and defaultFilterSchemaWorkspaces objects within the inspace-search package.
+        
+        ## api +1.0.0
+        
+        The introduction of breaking changes to the API warrants a major version increment to signify the non-backward-compatible modifications.
+        
+        ### Major
+        - 🧹 Updated API endpoints (BREAKING CHANGE) ([IN-900](link-to-issue-IN-900))
+          - The API endpoints were updated to improve performance and security. This change is not backward compatible.`;
+
+    const userMessage = commits;
+
+    // call openAi api
+    const response = await openai.createChatCompletion({
+        messages: [
+            {
+                content: systemPrompt,
+                role: ChatCompletionRequestMessageRoleEnum.System,
+            },
+            {
+                content: userMessage,
+                role: ChatCompletionRequestMessageRoleEnum.User,
+            },
+        ],
+        model: config.chatGPT.model,
+        max_tokens: config.chatGPT.maxTokens || DEFAULT_MAX_TOKENS,
+        temperature: config.chatGPT.temperature || DEFAULT_TEMPERATURE,
+        top_p: config.chatGPT.topP || DEFAULT_TOP_P,
+        frequency_penalty: config.chatGPT.frequencyPenalty || DEFAULT_FREQUENCY_PENALTY,
+        presence_penalty: config.chatGPT.presencePenalty || DEFAULT_PRESENCE_PENALTY,
+    });
+
+    if (!response.data.choices || response.data.choices.length === 0) {
+        throw new Error("GPT returned an empty response.");
+    }
+
+    return response.data.choices[0].message;
+};
