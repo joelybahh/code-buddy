@@ -11,7 +11,14 @@ import {
     isTruthy,
 } from "../utils/config.js";
 import { commitAll, getCommitLogs, getDiffForFiles } from "../utils/git.js";
-import { loadConfig } from "../utils/openai.js";
+import {
+    getChangelog,
+    loadChangelog,
+    loadConfig,
+    loadPackageJson,
+    writeChangelog,
+    writePackageJson,
+} from "../utils/openai.js";
 
 async function scopeConfirmationPrompt(scope: string) {
     const confirmScope = [
@@ -103,7 +110,55 @@ export async function generateChangelog(...args: any[]) {
         optionalArgs.destination || config.changelog?.destination || "main"
     );
 
-    console.log(commits);
+    const message = (await getChangelog(commits)).content;
+    const increment = getIncrementFromMessage(message);
 
-    //const message = await getChangelog(commits);
+    const packageJson = await loadPackageJson();
+    const currentVersion = packageJson.version;
+
+    console.log(chalk.yellow(`📦 Current Version: ${currentVersion}`));
+    console.log(chalk.yellow(`📦 Increment: ${increment}`));
+
+    const newVersion = incrementVersion(currentVersion, increment);
+
+    console.log(chalk.yellow(`📦 New Version: ${newVersion}`));
+
+    packageJson.version = newVersion;
+    let changeLog = await loadChangelog();
+
+    changeLog = injectChangelog(changeLog, message, newVersion);
+
+    await writeChangelog(changeLog);
+    await writePackageJson(packageJson);
+
+    console.log(chalk.green("✅ Successfully Generated Changelog"));
 }
+
+const injectChangelog = (changelog: string, message: string, newVersion: string) => {
+    // replace the ## + (major.minor.patch) with the new version
+    message = message.replace(/##\s+\+(\d+.\d+.\d+)/, `## ${newVersion}`);
+
+    // 4th line down is where we need to inject the changelog, with a \n before and after the message
+    const lines = changelog.split("\n");
+    lines.splice(4, 0, `${message}\n`);
+    return lines.join("\n");
+};
+
+const incrementVersion = (version: string, increment: string) => {
+    const [major, minor, patch] = version.split(".").map((v) => parseInt(v));
+    const [incMajor, incMinor, incPatch] = increment.split(".").map((v) => parseInt(v));
+
+    if (incMajor) return `${major + 1}.${minor}.${patch}`;
+    if (incMinor) return `${major}.${minor + 1}.${patch}`;
+    if (incPatch) return `${major}.${minor}.${patch + 1}`;
+
+    return version;
+};
+
+const getIncrementFromMessage = (message: string) => {
+    // ## + (major.minor.patch)
+    const regex = /##\s+\+(\d+.\d+.\d+)/;
+    const match = message.match(regex);
+    if (!match) return null;
+    return match[1];
+};
