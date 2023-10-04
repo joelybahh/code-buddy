@@ -2,6 +2,25 @@
 
 All notable changes to the CodeBuddy project will be documented in this file.
 
+## 0.7.0
+
+### Minor
+
+-   🎉 (utils) Added new utility functions for handling changelog and package.json files ([no-key](#))
+-   Added loadChangelog, loadPackageJson, writeChangelog, and writePackageJson functions in openai.ts
+-   Imported fs module for file operations
+-   Imported ScopeMode from types/index.js
+
+-   🎉 (types) Added appName to the changelog in CodeBuddyConfig ([no-key](#))
+-   The 'appName' field was added to the 'changelog' object in the 'CodeBuddyConfig' type.
+-   This change affects the 'types' scope of the codebase.
+
+-   🎉 (prompts) Automated versioning and changelog generation in prompts ([no-key](#))
+-   Added functions to load and write package.json and changelog files
+-   Implemented function to generate changelog from commit messages
+-   Added functionality to increment version based on changes
+-   Injected new changelog entries into existing changelog
+
 ## [0.6.0] - 23/07/2023
 
 ### Added
